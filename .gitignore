@@ -1,0 +1,15 @@
+src/packages/
+src/.vs
+src/*.user
+src/RoslynAnalyzers/RoslynAnalyzers/obj/
+src/RoslynAnalyzers/RoslynAnalyzers/bin/
+src/RoslynAnalyzers/RoslynAnalyzers.Vsix/bin/
+src/RoslynAnalyzers/RoslynAnalyzers.Vsix/obj/
+src/RoslynAnalyzers/RoslynAnalyzers.Test/bin/
+src/RoslynAnalyzers/RoslynAnalyzers.Test/obj/
+src/RoslynAnalyzers/RoslynAnalyzers.TechnicalDebt/bin/
+src/RoslynAnalyzers/RoslynAnalyzers.TechnicalDebt/obj/
+src/RoslynAnalyzers/RoslynAnalyzers.Host/bin/
+src/RoslynAnalyzers/RoslynAnalyzers.Host/obj/
+
+
