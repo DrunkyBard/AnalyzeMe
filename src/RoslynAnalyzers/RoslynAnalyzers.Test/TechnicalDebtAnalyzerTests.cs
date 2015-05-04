@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RoslynAnalyzers.TechnicalDebt;
 using TestHelper;
 
 namespace RoslynAnalyzers.Test
@@ -28,7 +29,7 @@ namespace Regex.Console
         public void ExpectNoDiagnostics()
         {
             var nextDay = DateTime.Now.AddDays(1);
-            var noDiagnosticsCode = ApplyFormat(nextDay.Year, nextDay.Month, nextDay.Day, "Valid reason");
+            var noDiagnosticsCode = ApplyFormat(nextDay.Year, (Month)nextDay.Month, nextDay.Day, "Valid reason");
 
             VerifyCSharpDiagnostic(noDiagnosticsCode);
         }
@@ -37,7 +38,7 @@ namespace Regex.Console
         [TestMethod]
         public void ExpectWrongDateDiagnostic()
         {
-            var diagnosticCode = ApplyFormat(-1, int.MaxValue, int.MinValue, "Valid reason");
+            var diagnosticCode = ApplyFormat(-1, Month.January, int.MinValue, "Valid reason");
             string errorMessage = null;
 
             try
@@ -68,8 +69,9 @@ namespace Regex.Console
         public void ExpectWrongReasonDiagnostic()
         {
             var nextDay = DateTime.Now.AddDays(1);
-            var nullReasonDiagnosticCode = ApplyFormat(nextDay.Year, nextDay.Month, nextDay.Day, null);
-            var emptyReasonDiagnosticCode = ApplyFormat(nextDay.Year, nextDay.Month, nextDay.Day, null);
+            var month = (Month) nextDay.Month;
+            var nullReasonDiagnosticCode = ApplyFormat(nextDay.Year, month, nextDay.Day, null);
+            var emptyReasonDiagnosticCode = ApplyFormat(nextDay.Year, month, nextDay.Day, null);
 
             var expected = new DiagnosticResult
             {
@@ -78,7 +80,7 @@ namespace Regex.Console
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 6, 32)
+                            new DiagnosticResultLocation("Test0.cs", 6, 70)
                         }
             };
             
@@ -91,7 +93,7 @@ namespace Regex.Console
         {
             var nextDay = DateTime.Now.AddDays(-1);
             var reason = "Valid reason";
-            var diagnosticCode = ApplyFormat(nextDay.Year, nextDay.Month, nextDay.Day, reason);
+            var diagnosticCode = ApplyFormat(nextDay.Year, (Month)nextDay.Month, nextDay.Day, reason);
 
             var expected = new DiagnosticResult
             {
@@ -107,13 +109,13 @@ namespace Regex.Console
             VerifyCSharpDiagnostic(diagnosticCode, expected);
         }
 
-        private string ApplyFormat(int year, int month, int day, string reason)
+        private string ApplyFormat(int year, Month month, int day, string reason)
         {
             reason = reason == null ? "null" : $@"""{reason}""";
 
             return Template
                 .Replace("{0}", year.ToString())
-                .Replace("{1}", month.ToString())
+                .Replace("{1}", string.Join(".", typeof(Month).ToString(), month.ToString()))
                 .Replace("{2}", day.ToString())
                 .Replace("{3}", reason);
         }
