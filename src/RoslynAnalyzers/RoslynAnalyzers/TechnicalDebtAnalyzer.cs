@@ -11,6 +11,9 @@ using DiagnosticSeverity = Microsoft.CodeAnalysis.DiagnosticSeverity;
 
 namespace RoslynAnalyzers
 {
+    /// <summary>
+    /// Analyze code for correctness of use TechnicalDebtAttribute and check if technical debt already expired.
+    /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class TechnicalDebtAnalyzer : DiagnosticAnalyzer
     {
