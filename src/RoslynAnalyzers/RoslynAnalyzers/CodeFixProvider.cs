@@ -15,12 +15,12 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace RoslynAnalyzers
 {
-    [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RoslynAnalyzersCodeFixProvider)), Shared]
+    //[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RoslynAnalyzersCodeFixProvider)), Shared]
     public class RoslynAnalyzersCodeFixProvider : CodeFixProvider
     {
         public sealed override ImmutableArray<string> FixableDiagnosticIds
         {
-            get { return ImmutableArray.Create(TechnicalDebtAnalyzer.DiagnosticId); }
+            get { return ImmutableArray.Create(TechnicalDebtAnalyzer.AttributeUsageDiagnosticId); }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()

@@ -14,7 +14,8 @@ namespace RoslynAnalyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class TechnicalDebtAnalyzer : DiagnosticAnalyzer
     {
-        public const string DiagnosticId = "TechnicalDebt";
+        public const string AttributeUsageDiagnosticId = "TechnicalDebtAttributeUsage";
+        public const string TechnicalDebtExpiredDiagnosticId = "TechnicalDebtExpired";
 
         internal static readonly LocalizableString AttributeUsageTitle = "Incorrect attribute usage.";
         internal static readonly LocalizableString AttributeUsageMessageFormat = "Attribute usage error: {0}";
@@ -24,8 +25,8 @@ namespace RoslynAnalyzers
         internal static readonly LocalizableString DebtExpiredMessageFormat = "Technical debt with reason \'{0}\' already expired.";
         internal static readonly string DebtExpiredCategory = "Design";
 
-        internal static readonly DiagnosticDescriptor AttributeUsageRule = new DiagnosticDescriptor(DiagnosticId, AttributeUsageTitle, AttributeUsageMessageFormat, AttributeUsageCategory, DiagnosticSeverity.Error, isEnabledByDefault: true);
-        internal static readonly DiagnosticDescriptor DebtExpiredRule = new DiagnosticDescriptor(DiagnosticId, DebtExpiredTitle, DebtExpiredMessageFormat, DebtExpiredCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor AttributeUsageRule = new DiagnosticDescriptor(AttributeUsageDiagnosticId, AttributeUsageTitle, AttributeUsageMessageFormat, AttributeUsageCategory, DiagnosticSeverity.Error, isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor DebtExpiredRule = new DiagnosticDescriptor(TechnicalDebtExpiredDiagnosticId, DebtExpiredTitle, DebtExpiredMessageFormat, DebtExpiredCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(AttributeUsageRule, DebtExpiredRule);
 

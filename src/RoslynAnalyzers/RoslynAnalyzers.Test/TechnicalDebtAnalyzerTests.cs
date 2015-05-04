@@ -52,7 +52,7 @@ namespace Regex.Console
 
             var expected = new DiagnosticResult
             {
-                Id = TechnicalDebtAnalyzer.DiagnosticId,
+                Id = TechnicalDebtAnalyzer.AttributeUsageDiagnosticId,
                 Message = $"Attribute usage error: {errorMessage}",
                 Severity = DiagnosticSeverity.Error,
                 Locations =
@@ -73,7 +73,7 @@ namespace Regex.Console
 
             var expected = new DiagnosticResult
             {
-                Id = TechnicalDebtAnalyzer.DiagnosticId,
+                Id = TechnicalDebtAnalyzer.AttributeUsageDiagnosticId,
                 Message = "Attribute usage error: Reason parameter should not be null or empty.",
                 Severity = DiagnosticSeverity.Error,
                 Locations =
@@ -95,7 +95,7 @@ namespace Regex.Console
 
             var expected = new DiagnosticResult
             {
-                Id = TechnicalDebtAnalyzer.DiagnosticId,
+                Id = TechnicalDebtAnalyzer.TechnicalDebtExpiredDiagnosticId,
                 Message = $"Technical debt with reason \'{reason}\' already expired.",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
