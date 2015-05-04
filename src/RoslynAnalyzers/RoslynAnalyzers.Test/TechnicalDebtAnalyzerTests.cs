@@ -14,10 +14,10 @@ namespace RoslynAnalyzers.Test
         private const string Template = @"
 using RoslynAnalyzers.TechnicalDebt;
 
-namespace Regex.Console
+namespace TestNamespace
 {
     [TechnicalDebt({0}, {1}, {2}, {3})]
-    class Test
+    class TestClass
     {
         static void Action()
         {

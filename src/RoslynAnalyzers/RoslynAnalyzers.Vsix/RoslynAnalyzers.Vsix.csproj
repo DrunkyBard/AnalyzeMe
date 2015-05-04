@@ -53,6 +53,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RoslynAnalyzers.TechnicalDebt\RoslynAnalyzers.TechnicalDebt.csproj">
+      <Project>{D329BE0A-8BF6-48C2-9B42-3868D12A3385}</Project>
+      <Name>RoslynAnalyzers.TechnicalDebt</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
     <ProjectReference Include="..\RoslynAnalyzers\RoslynAnalyzers.csproj">
       <Project>{7EC66ABB-65DF-4C44-B43F-403302B59654}</Project>
       <Name>RoslynAnalyzers</Name>
