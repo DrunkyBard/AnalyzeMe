@@ -2,12 +2,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>RoslynAnalyzers</id>
-    <version>$version$</version>
+    <version>1.0.0.0</version>
     <title>RoslynAnalyzers</title>
     <authors>Sattar Imamov</authors>
     <owners>Sattar Imamov</owners>
     <licenseUrl>https://github.com/DrunkyBard/RoslynAnalyzers/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/DrunkyBard/RoslynAnalyzers</projectUrl>
+    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>RoslynAnalyzers</description>
     <releaseNotes>
