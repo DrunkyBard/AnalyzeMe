@@ -19,6 +19,7 @@ namespace RoslynAnalyzers
     {
         public const string AttributeUsageDiagnosticId = "TechnicalDebtAttributeUsage";
         public const string TechnicalDebtExpiredDiagnosticId = "TechnicalDebtExpired";
+        public const string TechnicalDebtExpiredSoonDiagnosticId = "TechnicalDebtExpiredSoon";
 
         internal static readonly LocalizableString AttributeUsageTitle = "Incorrect attribute usage.";
         internal static readonly LocalizableString AttributeUsageMessageFormat = "Attribute usage error: {0}";
@@ -28,10 +29,15 @@ namespace RoslynAnalyzers
         internal static readonly LocalizableString DebtExpiredMessageFormat = "Technical debt with reason \'{0}\' already expired.";
         internal static readonly string DebtExpiredCategory = "Design";
 
-        internal static readonly DiagnosticDescriptor AttributeUsageRule = new DiagnosticDescriptor(AttributeUsageDiagnosticId, AttributeUsageTitle, AttributeUsageMessageFormat, AttributeUsageCategory, DiagnosticSeverity.Error, isEnabledByDefault: true);
-        internal static readonly DiagnosticDescriptor DebtExpiredRule = new DiagnosticDescriptor(TechnicalDebtExpiredDiagnosticId, DebtExpiredTitle, DebtExpiredMessageFormat, DebtExpiredCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
+        internal static readonly LocalizableString DebtExpiredSoonTitle = "Technical debt expired soon. Redesign this!";
+        internal static readonly LocalizableString DebtExpiredSoonMessageFormat = "Technical debt with reason \'{0}\' expired after {1} days.";
+        internal static readonly string DebtExpiredSoonCategory = "Design";
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(AttributeUsageRule, DebtExpiredRule);
+        internal static readonly DiagnosticDescriptor AttributeUsageRule = new DiagnosticDescriptor(AttributeUsageDiagnosticId, AttributeUsageTitle, AttributeUsageMessageFormat, AttributeUsageCategory, DiagnosticSeverity.Error, isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor DebtExpiredRule = new DiagnosticDescriptor(TechnicalDebtExpiredDiagnosticId, DebtExpiredTitle, DebtExpiredMessageFormat, DebtExpiredCategory, DiagnosticSeverity.Error, isEnabledByDefault: true);
+        internal static readonly DiagnosticDescriptor DebtExpiredSoonRule = new DiagnosticDescriptor(TechnicalDebtExpiredSoonDiagnosticId, DebtExpiredSoonTitle, DebtExpiredSoonMessageFormat, DebtExpiredSoonCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(AttributeUsageRule, DebtExpiredRule, DebtExpiredSoonRule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -87,11 +93,7 @@ namespace RoslynAnalyzers
             }
 
             var expiredDebtDiagnostic = CheckIsDebtExpired(new DateTime(yearValue, monthValue, dayValue), reasonValue, attributeLocation);
-
-            if (expiredDebtDiagnostic != null)
-            {
-                ctx.ReportDiagnostic(expiredDebtDiagnostic);
-            }
+            ctx.ReportDiagnostic(expiredDebtDiagnostic);
         }
 
         private IReadOnlyCollection<Diagnostic> CheckAttributeUsage(int year, int month, int day, string reason, Location attributeLocation, Location reasonLocation)
@@ -120,12 +122,14 @@ namespace RoslynAnalyzers
 
         private Diagnostic CheckIsDebtExpired(DateTime expiredDate, string debtReason, Location attributeLocation)
         {
-            if (expiredDate <= DateTime.Now)
+            var nowDate = DateTime.Now.Date;
+
+            if (expiredDate > nowDate)
             {
-                return Diagnostic.Create(DebtExpiredRule, attributeLocation, debtReason);
+                return Diagnostic.Create(DebtExpiredSoonRule, attributeLocation, debtReason, expiredDate.Subtract(nowDate).TotalDays);
             }
 
-            return null;
+            return Diagnostic.Create(DebtExpiredRule, attributeLocation, debtReason);
         }
     }
 }

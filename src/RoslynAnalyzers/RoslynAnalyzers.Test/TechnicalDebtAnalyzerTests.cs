@@ -26,16 +26,6 @@ namespace TestNamespace
 }";
 
         [TestMethod]
-        public void ExpectNoDiagnostics()
-        {
-            var nextDay = DateTime.Now.AddDays(1);
-            var noDiagnosticsCode = ApplyFormat(nextDay.Year, (Month)nextDay.Month, nextDay.Day, "Valid reason");
-
-            VerifyCSharpDiagnostic(noDiagnosticsCode);
-        }
-
-        //Diagnostic and CodeFix both triggered and checked for
-        [TestMethod]
         public void ExpectWrongDateDiagnostic()
         {
             var diagnosticCode = ApplyFormat(-1, Month.January, int.MinValue, "Valid reason");
@@ -99,6 +89,28 @@ namespace TestNamespace
             {
                 Id = TechnicalDebtAnalyzer.TechnicalDebtExpiredDiagnosticId,
                 Message = $"Technical debt with reason \'{reason}\' already expired.",
+                Severity = DiagnosticSeverity.Error,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 6, 6)
+                        }
+            };
+            
+            VerifyCSharpDiagnostic(diagnosticCode, expected);
+        }
+
+        [TestMethod]
+        public void ExpectExpiredSoonTechnicalDebtDiagnostic()
+        {
+            var nextDay = DateTime.Now.AddDays(1).Date;
+            var expiredDays = nextDay.Subtract(DateTime.Now.Date).TotalDays;
+            var reason = "Valid reason";
+            var diagnosticCode = ApplyFormat(nextDay.Year, (Month)nextDay.Month, nextDay.Day, reason);
+
+            var expected = new DiagnosticResult
+            {
+                Id = TechnicalDebtAnalyzer.TechnicalDebtExpiredSoonDiagnosticId,
+                Message = $"Technical debt with reason \'{reason}\' expired after {expiredDays} days.",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
