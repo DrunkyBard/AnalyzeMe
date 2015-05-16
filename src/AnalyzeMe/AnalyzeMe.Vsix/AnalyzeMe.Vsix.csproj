@@ -13,8 +13,8 @@
     <ProjectGuid>{37BFDBE0-6DED-448A-B7EE-C468050CF256}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RoslynAnalyzers</RootNamespace>
-    <AssemblyName>RoslynAnalyzers</AssemblyName>
+    <RootNamespace>AnalyzeMe.Vsix</RootNamespace>
+    <AssemblyName>AnalyzeMe.Vsix</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <GeneratePkgDefFile>false</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
@@ -53,15 +53,23 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RoslynAnalyzers.TechnicalDebt\RoslynAnalyzers.TechnicalDebt.csproj">
-      <Project>{D329BE0A-8BF6-48C2-9B42-3868D12A3385}</Project>
-      <Name>RoslynAnalyzers.TechnicalDebt</Name>
+    <ProjectReference Include="..\AnalyzeMe.Design.Analyzers\AnalyzeMe.Design.Analyzers.csproj">
+      <Project>{7B8B5578-7204-46E7-AC4F-C6444E7F48E9}</Project>
+      <Name>AnalyzeMe.Design.Analyzers</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
-    <ProjectReference Include="..\RoslynAnalyzers\RoslynAnalyzers.csproj">
+    <ProjectReference Include="..\AnalyzeMe.WorkProcess.Tools\AnalyzeMe.WorkProcess.Tools.csproj">
+      <Project>{D329BE0A-8BF6-48C2-9B42-3868D12A3385}</Project>
+      <Name>AnalyzeMe.WorkProcess.Tools</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
+    <ProjectReference Include="..\AnalyzeMe.WorkProcess.Analyzers\AnalyzeMe.WorkProcess.Analyzers.csproj">
       <Project>{7EC66ABB-65DF-4C44-B43F-403302B59654}</Project>
-      <Name>RoslynAnalyzers</Name>
+      <Name>AnalyzeMe.WorkProcess.Analyzers</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

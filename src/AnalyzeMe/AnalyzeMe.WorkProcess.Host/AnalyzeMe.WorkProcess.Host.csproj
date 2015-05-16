@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D329BE0A-8BF6-48C2-9B42-3868D12A3385}</ProjectGuid>
+    <ProjectGuid>{B16376F3-5E12-4968-A875-882E95F3D988}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RoslynAnalyzers.TechnicalDebt</RootNamespace>
-    <AssemblyName>RoslynAnalyzers.TechnicalDebt</AssemblyName>
+    <RootNamespace>AnalyzeMe.WorkProcess.Host</RootNamespace>
+    <AssemblyName>AnalyzeMe.WorkProcess.Host</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -40,10 +40,39 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TechnicalDebtAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AnalyzeMe.WorkProcess.Tools\AnalyzeMe.WorkProcess.Tools.csproj">
+      <Project>{d329be0a-8bf6-48c2-9b42-3868d12a3385}</Project>
+      <Name>AnalyzeMe.WorkProcess.Tools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AnalyzeMe.WorkProcess.Analyzers\AnalyzeMe.WorkProcess.Analyzers.csproj">
+      <Project>{7ec66abb-65df-4c44-b43f-403302b59654}</Project>
+      <Name>AnalyzeMe.WorkProcess.Analyzers</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Diagnostic.nuspec">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
+    <None Include="tools\install.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tools\uninstall.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>"$(SolutionDir)\packages\NuGet.CommandLine.2.8.5\tools\NuGet.exe" pack Diagnostic.nuspec -NoPackageAnalysis -OutputDirectory .</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

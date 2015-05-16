@@ -1,4 +1,5 @@
 ﻿using System;
+using AnalyzeMe.WorkProcess.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -6,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoslynAnalyzers.TechnicalDebt;
 using TestHelper;
 
-namespace RoslynAnalyzers.Test
+namespace AnalyzeMe.Tests
 {
     [TestClass]
     public class UnitTest : CodeFixVerifier
@@ -124,7 +125,7 @@ namespace TestNamespace
         private string ApplyFormat(int year, Month month, int day, string reason)
         {
             reason = reason == null ? "null" : $@"""{reason}""";
-
+            
             return Template
                 .Replace("{0}", year.ToString())
                 .Replace("{1}", string.Join(".", typeof(Month).ToString(), month.ToString()))

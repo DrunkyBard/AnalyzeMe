@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using AnalyzeMe.WorkProcess.Analyzers.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using RoslynAnalyzers.Extensions;
 using DiagnosticSeverity = Microsoft.CodeAnalysis.DiagnosticSeverity;
 
-namespace RoslynAnalyzers
+namespace AnalyzeMe.WorkProcess.Analyzers
 {
     /// <summary>
     /// Analyze code for correctness of use TechnicalDebtAttribute and check if technical debt already expired.
@@ -45,7 +45,7 @@ namespace RoslynAnalyzers
         }
 
         private void AnalyzeAttribute(SyntaxNodeAnalysisContext ctx)
-        {
+        {            
             var attributeSyntax = (AttributeSyntax)ctx.Node;
             var attributeSymbol = ctx.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol;
             var arguments = attributeSyntax.ArgumentList;

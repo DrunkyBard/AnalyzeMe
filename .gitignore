@@ -1,15 +1,17 @@
 src/packages/
 src/.vs
 src/*.user
-src/RoslynAnalyzers/RoslynAnalyzers/obj/
-src/RoslynAnalyzers/RoslynAnalyzers/bin/
-src/RoslynAnalyzers/RoslynAnalyzers.Vsix/bin/
-src/RoslynAnalyzers/RoslynAnalyzers.Vsix/obj/
-src/RoslynAnalyzers/RoslynAnalyzers.Test/bin/
-src/RoslynAnalyzers/RoslynAnalyzers.Test/obj/
-src/RoslynAnalyzers/RoslynAnalyzers.TechnicalDebt/bin/
-src/RoslynAnalyzers/RoslynAnalyzers.TechnicalDebt/obj/
-src/RoslynAnalyzers/RoslynAnalyzers.Host/bin/
-src/RoslynAnalyzers/RoslynAnalyzers.Host/obj/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Analyzers/obj/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Analyzers/bin/
+src/AnalyzeMe/AnalyzeMe.Vsix/bin/
+src/AnalyzeMe/AnalyzeMe.Vsix/obj/
+src/AnalyzeMe/AnalyzeMe.Tests/bin/
+src/AnalyzeMe/AnalyzeMe.Tests/obj/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Tools/bin/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Tools/obj/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Host/bin/
+src/AnalyzeMe/AnalyzeMe.WorkProcess.Host/obj/
+src/AnalyzeMe/AnalyzeMe.Design.Analyzers/bin/
+src/AnalyzeMe/AnalyzeMe.Design.Analyzers/obj/
 
 

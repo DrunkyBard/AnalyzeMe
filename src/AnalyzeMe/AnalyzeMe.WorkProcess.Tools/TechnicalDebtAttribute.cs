@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RoslynAnalyzers.TechnicalDebt
+namespace AnalyzeMe.WorkProcess.Tools
 {
     /// <summary>
     /// Attribute designed to display the technical debt in your code.

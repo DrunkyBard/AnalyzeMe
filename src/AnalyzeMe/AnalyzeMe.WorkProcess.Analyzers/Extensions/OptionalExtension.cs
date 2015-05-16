@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace RoslynAnalyzers.Extensions
+namespace AnalyzeMe.WorkProcess.Analyzers.Extensions
 {
     public static class OptionalExtension
     {
