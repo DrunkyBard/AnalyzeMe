@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using AnalyzeMe.WorkProcess.Tools;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
-using RoslynAnalyzers.TechnicalDebt;
 
 namespace TestHelper
 {
