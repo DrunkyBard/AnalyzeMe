@@ -1,16 +1,16 @@
 ﻿using System;
 using AnalyzeMe.WorkProcess.Analyzers;
+using AnalyzeMe.WorkProcess.Tools;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using RoslynAnalyzers.TechnicalDebt;
 using TestHelper;
 
 namespace AnalyzeMe.Tests
 {
     [TestClass]
-    public class UnitTest : CodeFixVerifier
+    public class TechnicalDebtAnalyzerTests : CodeFixVerifier
     {
         private const string Template = @"
 using RoslynAnalyzers.TechnicalDebt;
