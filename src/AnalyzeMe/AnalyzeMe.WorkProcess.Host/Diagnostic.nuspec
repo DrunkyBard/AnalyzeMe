@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <id>RoslynAnalyzers</id>
+    <id>AnalyzeMe</id>
     <version>1.0.0.1</version>
-    <title>RoslynAnalyzers</title>
+    <title>AnalyzeMe Project</title>
     <authors>Sattar Imamov</authors>
     <owners>Sattar Imamov</owners>
     <licenseUrl>https://github.com/DrunkyBard/RoslynAnalyzers/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/DrunkyBard/RoslynAnalyzers</projectUrl>
     <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>RoslynAnalyzers</description>
+    <description>AnalyzeMe Project</description>
     <releaseNotes>
     - Technical Debt analyzer
     </releaseNotes>
@@ -21,8 +21,8 @@
     </frameworkAssemblies>
   </metadata>
   <files>
-    <file src="RoslynAnalyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
-    <file src="RoslynAnalyzers.TechnicalDebt.dll" target="tools\libraries\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
+    <file src="AnalyzeMe.WorkProcess.Analyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
+    <file src="AnalyzeMe.WorkProcess.Tools.dll" target="tools\libraries\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="tools\*.ps1" target="tools\" />
   </files>
 </package>

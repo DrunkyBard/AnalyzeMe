@@ -68,10 +68,6 @@
       <HintPath>..\..\packages\Microsoft.CodeAnalysis.Workspaces.Common.1.0.0-rc2\lib\net45\Microsoft.CodeAnalysis.Workspaces.Desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="RoslynAnalyzers.TechnicalDebt, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\RoslynAnalyzers.TechnicalDebt\bin\Debug\RoslynAnalyzers.TechnicalDebt.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.1.33.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Collections.Immutable.1.1.33-beta\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
@@ -130,6 +126,10 @@
     <ProjectReference Include="..\AnalyzeMe.WorkProcess.Analyzers\AnalyzeMe.WorkProcess.Analyzers.csproj">
       <Project>{7EC66ABB-65DF-4C44-B43F-403302B59654}</Project>
       <Name>AnalyzeMe.WorkProcess.Analyzers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AnalyzeMe.WorkProcess.Tools\AnalyzeMe.WorkProcess.Tools.csproj">
+      <Project>{D329BE0A-8BF6-48C2-9B42-3868D12A3385}</Project>
+      <Name>AnalyzeMe.WorkProcess.Tools</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
