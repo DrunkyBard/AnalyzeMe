@@ -44,77 +44,84 @@ namespace AnalyzeMe.Design.Analyzers
 
             var classDeclarationSymbol = ctx.SemanticModel.GetDeclaredSymbol(classDeclarationNode);
 
-            await classDeclarationSymbol.FindDerivedClassesAsync(workspace.CurrentSolution, ctx.CancellationToken); //!!!
-
-            var sln = workspace.CurrentSolution;
             try
             {
-                var visitor = new CustomSymbolVisitor();
+                await classDeclarationSymbol.FindDerivedClassesAsync(workspace.CurrentSolution, ctx.CancellationToken); //!!!
 
-                foreach (var project in sln.Projects)
-                {
-                    var projectCompilation = await project.GetCompilationAsync();
-                    var symbols = projectCompilation.SyntaxTrees
-                        .SelectMany(x => x.GetRoot().DescendantNodes(y => y is ClassDeclarationSyntax))
-                        .Select(x => projectCompilation.GetSemanticModel(x.SyntaxTree).GetDeclaredSymbol(x))
-                        .ToList();
+            }
+            catch (Exception e)
+            {
+            }
 
-                    var locationsInMetadata = classDeclarationSymbol.Locations.Any(loc => loc.IsInMetadata);
+            //var sln = workspace.CurrentSolution;
+            //try
+            //{
+            //    var visitor = new CustomSymbolVisitor();
 
-                    if (true)
-                    {
-                        var t = projectCompilation.Assembly.TypeNames
-                            .Select(x => projectCompilation.GetTypeByMetadataName(x))
-                            .ToList();
+            //    foreach (var project in sln.Projects)
+            //    {
+            //        var projectCompilation = await project.GetCompilationAsync();
+            //        var symbols = projectCompilation.SyntaxTrees
+            //            .SelectMany(x => x.GetRoot().DescendantNodes(y => y is ClassDeclarationSyntax))
+            //            .Select(x => projectCompilation.GetSemanticModel(x.SyntaxTree).GetDeclaredSymbol(x))
+            //            .ToList();
 
-                        var l = projectCompilation.Assembly.GlobalNamespace.GetMembers().Where(x => x.IsType);
-                        var l1 = projectCompilation.GlobalNamespace.GetTypeMembers();
+            //        var locationsInMetadata = classDeclarationSymbol.Locations.Any(loc => loc.IsInMetadata);
 
-                        foreach (var namespaceOrTypeSymbol in l)
-                        {
-                            namespaceOrTypeSymbol.Accept(visitor);
-                        }
+            //        if (true)
+            //        {
+            //            var t = projectCompilation.Assembly.TypeNames
+            //                .Select(x => projectCompilation.GetTypeByMetadataName(x))
+            //                .ToList();
+
+            //            var l = projectCompilation.Assembly.GlobalNamespace.GetMembers().Where(x => x.IsType);
+            //            var l1 = projectCompilation.GlobalNamespace.GetTypeMembers();
+
+            //            foreach (var namespaceOrTypeSymbol in l)
+            //            {
+            //                namespaceOrTypeSymbol.Accept(visitor);
+            //            }
+            //        }
+            //    }
+
+            //    var references32 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.AssociatedSymbol, sln);
+            //    var references3 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.ConstructedFrom, sln);
+            //    var references43 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.OriginalDefinition, sln);
+            //    var references = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol, sln);
+            //    var refs = await SymbolFinder.FindImplementationsAsync(classDeclarationSymbol, sln, sln.Projects.ToImmutableSortedSet());
+
+
+            //    foreach (var referencedSymbol in references)
+            //    {
+            //        referencedSymbol.Definition.Accept(visitor);
+            //    }
+            //    foreach (var referencedSymbol in references32)
+            //    {
+            //        referencedSymbol.Definition.Accept(visitor);
+            //    }
+            //    foreach (var referencedSymbol in references3)
+            //    {
+            //        referencedSymbol.Definition.Accept(visitor);
+            //    }
+            //    foreach (var referencedSymbol in references43)
+            //    {
+            //        referencedSymbol.Definition.Accept(visitor);
+            //    }
+
+            //    foreach (var symbol in refs)
+            //    {
+            //        symbol.Accept(visitor);
+            //    }
+            //}
+            //catch (Exception)
+            //{
+            //    var g = 1;
+            //}
+
+
+            //var a = 1;
         }
     }
-
-                var references32 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.AssociatedSymbol, sln);
-                var references3 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.ConstructedFrom, sln);
-                var references43 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.OriginalDefinition, sln);
-                var references = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol, sln);
-                var refs = await SymbolFinder.FindImplementationsAsync(classDeclarationSymbol, sln, sln.Projects.ToImmutableSortedSet());
-
-
-                foreach (var referencedSymbol in references)
-                {
-                    referencedSymbol.Definition.Accept(visitor);
-                }
-                foreach (var referencedSymbol in references32)
-                {
-                    referencedSymbol.Definition.Accept(visitor);
-                }
-                foreach (var referencedSymbol in references3)
-                {
-                    referencedSymbol.Definition.Accept(visitor);
-                }
-                foreach (var referencedSymbol in references43)
-    {
-                    referencedSymbol.Definition.Accept(visitor);
-                }
-
-                foreach (var symbol in refs)
-                {
-                    symbol.Accept(visitor);
-                }
-            }
-            catch (Exception)
-        {
-                var g = 1;
-        }
-
-
-            var a = 1;
-        }
-        }
 
     class CustomSymbolVisitor : SymbolVisitor
     {

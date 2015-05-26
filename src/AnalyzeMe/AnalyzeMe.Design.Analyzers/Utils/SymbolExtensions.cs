@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using QAlias = AnalyzeMe.Design.Analyzers.Utils.Q;
 
@@ -74,13 +75,15 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             var currentBaseType = type.BaseType;
             while (currentBaseType != null)
             {
-                if (currentBaseType.Equals(currentBaseType.ConstructedFrom) == originalBaseType.Equals(originalBaseType)
-                    && currentBaseType.IsDefinition == originalBaseType.IsDefinition
-                    && currentBaseType.Name == originalBaseType.Name
-                    && currentBaseType.IsAnonymousType == originalBaseType.IsAnonymousType
-                    && currentBaseType.IsUnboundGenericType == originalBaseType.IsUnboundGenericType
-                    && (currentBaseType.ContainingAssembly == null || originalBaseType.ContainingAssembly == null || currentBaseType.ContainingAssembly.Name == originalBaseType.ContainingAssembly.Name)
-                    && CheckTypeArguments(currentBaseType.TypeArguments, originalBaseType.TypeArguments))
+                var definitionOfCurrentBaseType = currentBaseType.OriginalDefinition;
+
+                if (definitionOfCurrentBaseType.Equals(definitionOfCurrentBaseType.ConstructedFrom) == originalBaseType.Equals(originalBaseType.ConstructedFrom)
+                    && definitionOfCurrentBaseType.IsDefinition == originalBaseType.IsDefinition
+                    && definitionOfCurrentBaseType.Name == originalBaseType.Name
+                    && definitionOfCurrentBaseType.IsAnonymousType == originalBaseType.IsAnonymousType
+                    && definitionOfCurrentBaseType.IsUnboundGenericType == originalBaseType.IsUnboundGenericType
+                    && (definitionOfCurrentBaseType.ContainingAssembly == null || originalBaseType.ContainingAssembly == null || definitionOfCurrentBaseType.ContainingAssembly.Identity.ToString() == originalBaseType.ContainingAssembly.Identity.ToString())
+                    && CheckTypeArguments(definitionOfCurrentBaseType.TypeArguments, originalBaseType.TypeArguments))
                 {
                     return true;
                 }
@@ -100,14 +103,9 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             var visitor = new TypeArgumentVisitor();
 
-            foreach (var typeSymbol in x)
+            for (int i = 0; i < x.Length; i++)
             {
-                visitor.Visit(typeSymbol);
-            }
-
-            foreach (var typeSymbol in y)
-            {
-                visitor.Visit(typeSymbol);
+                visitor.Visit(x[i], y[i]);
             }
 
             return true;
@@ -149,36 +147,30 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             {
                 return new List<INamedTypeSymbol> {symbol};
             }
-
+            
             return Enumerable.Empty<INamedTypeSymbol>().ToList();
         }
     }
 
     internal sealed class TypeArgumentVisitor : SymbolVisitor
     {
-        public override void VisitAlias(IAliasSymbol symbol)
-        {
-            base.VisitAlias(symbol);
-        }
+        private ITypeSymbol _baseTypeSymbol;
 
-        public override void VisitNamedType(INamedTypeSymbol symbol)
+        public void Visit(ITypeSymbol currentBaseType, ITypeSymbol originBaseType)
         {
-            base.VisitNamedType(symbol);
-        }
-
-        public override void VisitDynamicType(IDynamicTypeSymbol symbol)
-        {
-            base.VisitDynamicType(symbol);
+            //TODO: Check all constraints via ITypeParameterSymbol properties
+            _baseTypeSymbol = originBaseType;
+            Visit(currentBaseType);
         }
 
         public override void VisitTypeParameter(ITypeParameterSymbol symbol)
         {
-            base.VisitTypeParameter(symbol);
-        }
+            var res = _.Match(
+                match: _baseTypeSymbol.As<ITypeParameterSymbol>(),
+                some: x => true,
+                none: () => false);
 
-        public override void VisitArrayType(IArrayTypeSymbol symbol)
-        {
-            base.VisitArrayType(symbol);
+            base.VisitTypeParameter(symbol);
         }
     }
 }
