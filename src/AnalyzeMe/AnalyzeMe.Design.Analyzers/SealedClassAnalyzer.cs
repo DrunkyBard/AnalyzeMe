@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -42,6 +43,9 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var classDeclarationSymbol = ctx.SemanticModel.GetDeclaredSymbol(classDeclarationNode);
+
+            await classDeclarationSymbol.FindDerivedClassesAsync(workspace.CurrentSolution, ctx.CancellationToken); //!!!
+
             var sln = workspace.CurrentSolution;
             try
             {
@@ -55,7 +59,6 @@ namespace AnalyzeMe.Design.Analyzers
                         .Select(x => projectCompilation.GetSemanticModel(x.SyntaxTree).GetDeclaredSymbol(x))
                         .ToList();
 
-                    
                     var locationsInMetadata = classDeclarationSymbol.Locations.Any(loc => loc.IsInMetadata);
 
                     if (true)
@@ -71,8 +74,8 @@ namespace AnalyzeMe.Design.Analyzers
                         {
                             namespaceOrTypeSymbol.Accept(visitor);
                         }
-                    }
-                }
+        }
+    }
 
                 var references32 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.AssociatedSymbol, sln);
                 var references3 = await SymbolFinder.FindReferencesAsync(classDeclarationSymbol.ConstructedFrom, sln);
@@ -84,14 +87,17 @@ namespace AnalyzeMe.Design.Analyzers
                 foreach (var referencedSymbol in references)
                 {
                     referencedSymbol.Definition.Accept(visitor);
-                }foreach (var referencedSymbol in references32)
+                }
+                foreach (var referencedSymbol in references32)
                 {
                     referencedSymbol.Definition.Accept(visitor);
-                }foreach (var referencedSymbol in references3)
+                }
+                foreach (var referencedSymbol in references3)
                 {
                     referencedSymbol.Definition.Accept(visitor);
-                }foreach (var referencedSymbol in references43)
-                {
+                }
+                foreach (var referencedSymbol in references43)
+    {
                     referencedSymbol.Definition.Accept(visitor);
                 }
 
@@ -101,14 +107,14 @@ namespace AnalyzeMe.Design.Analyzers
                 }
             }
             catch (Exception)
-            {
+        {
                 var g = 1;
-            }
-           
-            
+        }
+
+
             var a = 1;
         }
-    }
+        }
 
     class CustomSymbolVisitor : SymbolVisitor
     {
