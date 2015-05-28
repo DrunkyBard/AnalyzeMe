@@ -147,7 +147,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             {
                 return new List<INamedTypeSymbol> {symbol};
             }
-            
+            //
             return Enumerable.Empty<INamedTypeSymbol>().ToList();
         }
     }
