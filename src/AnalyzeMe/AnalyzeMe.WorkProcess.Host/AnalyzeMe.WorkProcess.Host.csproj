@@ -43,6 +43,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AnalyzeMe.Design.Analyzers\AnalyzeMe.Design.Analyzers.csproj">
+      <Project>{7b8b5578-7204-46e7-ac4f-c6444e7f48e9}</Project>
+      <Name>AnalyzeMe.Design.Analyzers</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AnalyzeMe.WorkProcess.Tools\AnalyzeMe.WorkProcess.Tools.csproj">
       <Project>{d329be0a-8bf6-48c2-9b42-3868d12a3385}</Project>
       <Name>AnalyzeMe.WorkProcess.Tools</Name>

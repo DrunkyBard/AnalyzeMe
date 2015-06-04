@@ -21,6 +21,7 @@
     </frameworkAssemblies>
   </metadata>
   <files>
+    <file src="AnalyzeMe.Design.Analyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="AnalyzeMe.WorkProcess.Analyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="AnalyzeMe.WorkProcess.Tools.dll" target="tools\libraries\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="tools\*.ps1" target="tools\" />

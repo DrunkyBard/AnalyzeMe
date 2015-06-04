@@ -4,26 +4,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
-using QAlias = AnalyzeMe.Design.Analyzers.Utils.Q;
 
 namespace AnalyzeMe.Design.Analyzers.Utils
 {
-    class Q
-    {
-    }
-
-    class C<A, B>
-    {
-         
-    }
-
-    class C1 : C<int[], QAlias>
-    {
-    }
-
-
     public static class SymbolExtensions
     {
         public static async Task<IEnumerable<INamedTypeSymbol>> FindDerivedClassesAsync(
@@ -45,14 +29,17 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return findDerivedTypeTasks.SelectMany(x => x.Result);
         }
 
-        private static async Task<IReadOnlyCollection<INamedTypeSymbol>> FindDerivedTypesAsync(Project project, INamedTypeSymbol classSymbol, CancellationToken cancellationToken)
+        private static async Task<IReadOnlyCollection<INamedTypeSymbol>> FindDerivedTypesAsync(
+            Project project, 
+            INamedTypeSymbol classSymbol, 
+            CancellationToken cancellationToken)
         {
             var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
             var allTypes = GetContainingTypes(compilation.GlobalNamespace)
                 .Where(potentialDerivedType => potentialDerivedType.InheritsFromIgnoringConstruction(classSymbol))
                 .ToList();
 
-            return null;
+            return allTypes;
         }
 
         private static IReadOnlyCollection<INamedTypeSymbol> GetContainingTypes(INamespaceSymbol nsSymbol)
@@ -63,16 +50,16 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return namedTypes;
         }
 
-        public static bool InheritsFromIgnoringConstruction(this INamedTypeSymbol type, INamedTypeSymbol baseType)
+        public static bool InheritsFromIgnoringConstruction(this INamedTypeSymbol potentialDerivedType, INamedTypeSymbol baseType)
         {
-            if (type.TypeKind != baseType.TypeKind)
+            if (potentialDerivedType.TypeKind != baseType.TypeKind)
             {
                 return false;
             }
 
             var originalBaseType = baseType.OriginalDefinition;
-            
-            var currentBaseType = type.BaseType;
+            var currentBaseType = potentialDerivedType.BaseType;
+
             while (currentBaseType != null)
             {
                 var definitionOfCurrentBaseType = currentBaseType.OriginalDefinition;
@@ -101,14 +88,35 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 return false;
             }
 
-            var visitor = new TypeArgumentVisitor();
-
             for (int i = 0; i < x.Length; i++)
             {
-                visitor.Visit(x[i], y[i]);
+                var equals = CheckTypeParametersForEquality(x[i], y[i]);
+
+                if (!equals)
+                {
+                    return false;
+                }
             }
 
             return true;
+        }
+
+        private static bool CheckTypeParametersForEquality(ITypeSymbol currentBaseType, ITypeSymbol originBaseType)
+        {
+            var currentTypeParameter = currentBaseType as ITypeParameterSymbol;
+            var originTypeParameter = originBaseType as ITypeParameterSymbol;
+
+            if (currentTypeParameter == null || originTypeParameter == null)
+            {
+                return false;
+            }
+
+            var match =
+                currentTypeParameter.HasConstructorConstraint == originTypeParameter.HasConstructorConstraint
+                && currentTypeParameter.HasReferenceTypeConstraint == originTypeParameter.HasReferenceTypeConstraint
+                && currentTypeParameter.HasValueTypeConstraint == originTypeParameter.HasValueTypeConstraint;
+
+            return match;
         }
 
         private static Tuple<ISymbol, SymbolKind> UnwrapClassDeclarationSymbol(ISymbol symbol)
@@ -132,45 +140,20 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             var members = symbol
                 .GetMembers()
                 .ToList();
-            var a = members.SelectMany(Visit)
-            .ToList();
 
-            return a;
+            return members.SelectMany(Visit).ToList();
         }
 
         public override IReadOnlyCollection<INamedTypeSymbol> VisitNamedType(INamedTypeSymbol symbol)
         {
-            var canBeReferenced = symbol.CanBeReferencedByName;
             var isInSource = symbol.Locations.Any(loc => loc.IsInSource);
 
             if (isInSource)
             {
                 return new List<INamedTypeSymbol> {symbol};
             }
-            //
+            
             return Enumerable.Empty<INamedTypeSymbol>().ToList();
-        }
-    }
-
-    internal sealed class TypeArgumentVisitor : SymbolVisitor
-    {
-        private ITypeSymbol _baseTypeSymbol;
-
-        public void Visit(ITypeSymbol currentBaseType, ITypeSymbol originBaseType)
-        {
-            //TODO: Check all constraints via ITypeParameterSymbol properties
-            _baseTypeSymbol = originBaseType;
-            Visit(currentBaseType);
-        }
-
-        public override void VisitTypeParameter(ITypeParameterSymbol symbol)
-        {
-            var res = _.Match(
-                match: _baseTypeSymbol.As<ITypeParameterSymbol>(),
-                some: x => true,
-                none: () => false);
-
-            base.VisitTypeParameter(symbol);
         }
     }
 }
