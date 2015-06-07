@@ -106,6 +106,7 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SealedClassAnalyzerTests.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
     <Compile Include="Verifiers\DiagnosticVerifier.cs" />
     <Compile Include="Helpers\CodeFixVerifier.Helper.cs" />
@@ -123,6 +124,10 @@
     <Analyzer Include="..\..\packages\Microsoft.CodeAnalysis.Analyzers.1.0.0-rc2\tools\analyzers\C#\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AnalyzeMe.Design.Analyzers\AnalyzeMe.Design.Analyzers.csproj">
+      <Project>{7B8B5578-7204-46E7-AC4F-C6444E7F48E9}</Project>
+      <Name>AnalyzeMe.Design.Analyzers</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AnalyzeMe.WorkProcess.Analyzers\AnalyzeMe.WorkProcess.Analyzers.csproj">
       <Project>{7EC66ABB-65DF-4C44-B43F-403302B59654}</Project>
       <Name>AnalyzeMe.WorkProcess.Analyzers</Name>

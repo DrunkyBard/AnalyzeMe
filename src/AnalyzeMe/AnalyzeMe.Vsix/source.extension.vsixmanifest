@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="RoslynAnalyzers.Vsix..70f2dfaf-2e1b-40e1-bcbf-22c1987bdd9c" Version="1.0" Language="en-US" Publisher="Sattar"/>
-    <DisplayName>RoslynAnalyzers.Vsix</DisplayName>
+    <Identity Id="AnalyzeMe.Vsix..70f2dfaf-2e1b-40e1-bcbf-22c1987bdd9c" Version="1.0" Language="en-US" Publisher="Sattar"/>
+    <DisplayName>AnalyzeMe.Vsix</DisplayName>
     <Description xml:space="preserve">This is a simple set of analyzers for the .NET Compiler Platform ("Roslyn").</Description>
   </Metadata>
   <Installation>

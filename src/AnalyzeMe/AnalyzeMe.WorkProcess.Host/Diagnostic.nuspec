@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>AnalyzeMe</id>
-    <version>1.0.0.1</version>
+    <version>1.0.0.2</version>
     <title>AnalyzeMe Project</title>
     <authors>Sattar Imamov</authors>
     <owners>Sattar Imamov</owners>
@@ -13,6 +13,7 @@
     <description>AnalyzeMe Project</description>
     <releaseNotes>
     - Technical Debt analyzer
+    - Sealed class analyzer
     </releaseNotes>
     <copyright>Sattar Imamov</copyright>
     <tags>RoslynAnalyzers, analyzers</tags>
@@ -21,6 +22,7 @@
     </frameworkAssemblies>
   </metadata>
   <files>
+    <file src="AnalyzeMe.Design.Analyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="AnalyzeMe.WorkProcess.Analyzers.dll" target="tools\analyzers\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="AnalyzeMe.WorkProcess.Tools.dll" target="tools\libraries\C#" exclude="**\Microsoft.CodeAnalysis.*;**\System.Collections.Immutable.*;**\System.Reflection.Metadata.*" />
     <file src="tools\*.ps1" target="tools\" />

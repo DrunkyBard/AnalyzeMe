@@ -2,7 +2,6 @@
 using AnalyzeMe.WorkProcess.Analyzers;
 using AnalyzeMe.WorkProcess.Tools;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
@@ -13,7 +12,7 @@ namespace AnalyzeMe.Tests
     public class TechnicalDebtAnalyzerTests : CodeFixVerifier
     {
         private const string Template = @"
-using RoslynAnalyzers.TechnicalDebt;
+using AnalyzeMe.WorkProcess.Tools;
 
 namespace TestNamespace
 {
@@ -71,7 +70,7 @@ namespace TestNamespace
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 6, 70)
+                            new DiagnosticResultLocation("Test0.cs", 6, 69)
                         }
             };
             
@@ -131,11 +130,6 @@ namespace TestNamespace
                 .Replace("{1}", string.Join(".", typeof(Month).ToString(), month.ToString()))
                 .Replace("{2}", day.ToString())
                 .Replace("{3}", reason);
-        }
-
-        protected override CodeFixProvider GetCSharpCodeFixProvider()
-        {
-            return new RoslynAnalyzersCodeFixProvider();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
