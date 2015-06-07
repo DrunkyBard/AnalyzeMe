@@ -153,26 +153,35 @@ namespace TestHelper
         {
             string fileNamePrefix = DefaultFilePathPrefix;
             string fileExt = language == LanguageNames.CSharp ? CSharpDefaultFileExt : VisualBasicDefaultExt;
-
             var projectId = ProjectId.CreateNewId(debugName: TestProjectName);
+            var documents = new List<DocumentInfo>();
 
-            var solution = new AdhocWorkspace()
-                .CurrentSolution
-                .AddProject(projectId, TestProjectName, TestProjectName, language)
-                .AddMetadataReference(projectId, CorlibReference)
-                .AddMetadataReference(projectId, SystemCoreReference)
-                .AddMetadataReference(projectId, CSharpSymbolsReference)
-                .AddMetadataReference(projectId, CodeAnalysisReference)
-                .AddMetadataReference(projectId, TechDebtReference);
-            
-            int count = 0;
-            foreach (var source in sources)
+            for (int i = 0; i < sources.Length; i++)
             {
-                var newFileName = fileNamePrefix + count + "." + fileExt;
+                var source = sources[i];
+                var newFileName = fileNamePrefix + i + "." + fileExt;
                 var documentId = DocumentId.CreateNewId(projectId, debugName: newFileName);
-                solution = solution.AddDocument(documentId, newFileName, SourceText.From(source));
-                count++;
+                var sourceText = SourceText.From(source);
+                var textAndVersion = TextAndVersion.Create(sourceText, VersionStamp.Default);
+                var docInfo = DocumentInfo.Create(documentId, newFileName, loader: TextLoader.From(textAndVersion));
+                documents.Add(docInfo);
             }
+
+            var projInfo = ProjectInfo.Create(projectId, VersionStamp.Default, TestProjectName, TestProjectName + ".dll", language,
+                metadataReferences: new List<MetadataReference> { CorlibReference, SystemCoreReference, CSharpSymbolsReference, CodeAnalysisReference, TechDebtReference },
+                documents: documents);
+            var slnInfo = SolutionInfo.Create(
+                SolutionId.CreateNewId("TestSln"), 
+                VersionStamp.Default, 
+                projects: new List<ProjectInfo> { projInfo });
+            var solution = new AdhocWorkspace()
+                .AddSolution(slnInfo);
+                
+            foreach (var docId in documents.Select(x => x.Id))
+            {
+                solution.Workspace.OpenDocument(docId);
+            }
+
             return solution.GetProject(projectId);
         }
         #endregion

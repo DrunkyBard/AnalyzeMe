@@ -8,6 +8,9 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace AnalyzeMe.Design.Analyzers
 {
+    /// <summary>
+    /// Checks whether the class mark sealed modifier.
+    /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class SealedClassAnalyzer : DiagnosticAnalyzer
     {
@@ -16,11 +19,11 @@ namespace AnalyzeMe.Design.Analyzers
         internal static readonly LocalizableString ClassCanBeSealedMessageFormat = "Class can be marked as sealed.";
         internal const string AttributeUsageCategory = "Design";
         internal static readonly DiagnosticDescriptor ClassCanBeSealedRule = new DiagnosticDescriptor(
-            ClassCanBeSealedDiagnosticId, 
-            ClassCanBeSealedTitle, 
-            ClassCanBeSealedMessageFormat, 
-            AttributeUsageCategory, 
-            DiagnosticSeverity.Warning, 
+            ClassCanBeSealedDiagnosticId,
+            ClassCanBeSealedTitle,
+            ClassCanBeSealedMessageFormat,
+            AttributeUsageCategory,
+            DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ClassCanBeSealedRule);
 
@@ -33,19 +36,9 @@ namespace AnalyzeMe.Design.Analyzers
         {
             var classDeclarationNode = (ClassDeclarationSyntax)ctx.Node;
             var classDeclarationSymbol = ctx.SemanticModel.GetDeclaredSymbol(classDeclarationNode);
-            var classMembers = classDeclarationSymbol.GetMembers().ToList();
-            var visitor = new ClassMembersVisitor();
-            
-            if (classDeclarationSymbol.IsSealed || classDeclarationSymbol.IsAbstract || classMembers.Any(visitor.Visit))
-            {
-                return;
-            }
+            var workspace = classDeclarationNode.TryGetWorkspace();
 
-            var syntaxTreeContainer = classDeclarationNode.SyntaxTree.GetText().Container;
-            Workspace workspace;
-            Workspace.TryGetWorkspace(syntaxTreeContainer, out workspace);
-
-            if (workspace == null)
+            if (IsAbstractStaticOrSealed(classDeclarationSymbol) || workspace == null)
             {
                 return;
             }
@@ -55,22 +48,29 @@ namespace AnalyzeMe.Design.Analyzers
             if (!derivedTypes.Any())
             {
                 var diagnostic = Diagnostic.Create(ClassCanBeSealedRule, classDeclarationNode.Identifier.GetLocation());
-                //var diagnostic = Diagnostic.Create(ClassCanBeSealedRule, classDeclarationNode.GetLocation());
                 ctx.ReportDiagnostic(diagnostic);
             }
         }
-    }
 
-    class ClassMembersVisitor : SymbolVisitor<bool>
-    {
-        public override bool VisitProperty(IPropertySymbol symbol)
+        private static bool IsAbstractStaticOrSealed(INamedTypeSymbol symbol)
         {
-            return symbol.IsVirtual;
+            var visitor = new ClassMembersVisitor();
+            var classMembers = symbol.GetMembers().ToList();
+
+            return symbol.IsStatic || symbol.IsSealed || symbol.IsAbstract || classMembers.Any(visitor.Visit);
         }
 
-        public override bool VisitMethod(IMethodSymbol symbol)
+        private class ClassMembersVisitor : SymbolVisitor<bool>
         {
-            return symbol.IsVirtual;
+            public override bool VisitProperty(IPropertySymbol symbol)
+            {
+                return symbol.IsVirtual;
+            }
+
+            public override bool VisitMethod(IMethodSymbol symbol)
+            {
+                return symbol.IsVirtual;
+            }
         }
     }
 }

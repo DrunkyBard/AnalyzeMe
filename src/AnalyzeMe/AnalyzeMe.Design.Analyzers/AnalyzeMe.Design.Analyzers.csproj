@@ -43,8 +43,10 @@
     <Compile Include="SealedClassAnalyzer.cs" />
     <Compile Include="SealedClassCodeFixProvider.cs" />
     <Compile Include="Utils\FunctionalProgrammingFeatures.cs" />
+    <Compile Include="Utils\NamespaceOrNamedTypeVisitor.cs" />
     <Compile Include="Utils\ObjectExtensions.cs" />
     <Compile Include="Utils\SymbolExtensions.cs" />
+    <Compile Include="Utils\SyntaxNodeExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\..\packages\Microsoft.CodeAnalysis.Analyzers.1.0.0-rc2\tools\analyzers\C#\Microsoft.CodeAnalysis.Analyzers.dll" />

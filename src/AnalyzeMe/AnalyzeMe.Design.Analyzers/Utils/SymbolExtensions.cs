@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -10,6 +9,14 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
     public static class SymbolExtensions
     {
+        /// <summary>
+        /// Find all derived types for <paramref name="type"/> symbol.
+        /// </summary>
+        /// <param name="type">Type symbol for which there is a search of all derived types.</param>
+        /// <param name="solution">Current solution.</param>
+        /// <param name="cancellationToken">Token for cancellation of the analysis.</param>
+        /// <returns>Collection of derived types from <paramref name="type"/> symbol.</returns>
+        /// <remarks>Note that method find all derieved types in current solution, only in source code, not in external libraries!</remarks>
         public static async Task<IEnumerable<INamedTypeSymbol>> FindDerivedClassesAsync(
             this INamedTypeSymbol type,
             Solution solution,
@@ -30,13 +37,13 @@ namespace AnalyzeMe.Design.Analyzers.Utils
         }
 
         private static async Task<IReadOnlyCollection<INamedTypeSymbol>> FindDerivedTypesAsync(
-            Project project, 
-            INamedTypeSymbol classSymbol, 
+            Project project,
+            INamedTypeSymbol classSymbol,
             CancellationToken cancellationToken)
         {
             var compilation = await project.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
             var allTypes = GetContainingTypes(compilation.GlobalNamespace)
-                .Where(potentialDerivedType => potentialDerivedType.InheritsFromIgnoringConstruction(classSymbol))
+                .Where(potentialDerivedType => potentialDerivedType.InheritsFrom(classSymbol))
                 .ToList();
 
             return allTypes;
@@ -50,7 +57,13 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return namedTypes;
         }
 
-        public static bool InheritsFromIgnoringConstruction(this INamedTypeSymbol potentialDerivedType, INamedTypeSymbol baseType)
+        /// <summary>
+        /// Recursively checks whether the <paramref name="potentialDerivedType"/> type symbol to be derived from <paramref name="baseType"/> type symbol.
+        /// </summary>
+        /// <param name="potentialDerivedType">Verifyable potential derived type.</param>
+        /// <param name="baseType">Base type of <paramref name="potentialDerivedType"/>.</param>
+        /// <returns>True, if <paramref name="potentialDerivedType"/> is derived type from <paramref name="baseType"/>, otherwise false.</returns>
+        private static bool InheritsFrom(this INamedTypeSymbol potentialDerivedType, INamedTypeSymbol baseType)
         {
             if (potentialDerivedType.TypeKind != baseType.TypeKind)
             {
@@ -74,7 +87,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 {
                     return true;
                 }
-                
+
                 currentBaseType = currentBaseType.BaseType;
             }
 
@@ -117,43 +130,6 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 && currentTypeParameter.HasValueTypeConstraint == originTypeParameter.HasValueTypeConstraint;
 
             return match;
-        }
-
-        private static Tuple<ISymbol, SymbolKind> UnwrapClassDeclarationSymbol(ISymbol symbol)
-        {
-            var kind = symbol.Kind;
-            var returnSymbol = symbol;
-
-            if (kind == SymbolKind.Alias)
-            {
-                returnSymbol = ((IAliasSymbol)symbol).Target;
-            }
-
-            return new Tuple<ISymbol, SymbolKind>(returnSymbol, kind);
-        }
-    }
-
-    internal sealed class NamespaceOrNamedTypeVisitor : SymbolVisitor<IReadOnlyCollection<INamedTypeSymbol>>
-    {
-        public override IReadOnlyCollection<INamedTypeSymbol> VisitNamespace(INamespaceSymbol symbol)
-        {
-            var members = symbol
-                .GetMembers()
-                .ToList();
-
-            return members.SelectMany(Visit).ToList();
-        }
-
-        public override IReadOnlyCollection<INamedTypeSymbol> VisitNamedType(INamedTypeSymbol symbol)
-        {
-            var isInSource = symbol.Locations.Any(loc => loc.IsInSource);
-
-            if (isInSource)
-            {
-                return new List<INamedTypeSymbol> {symbol};
-            }
-            
-            return Enumerable.Empty<INamedTypeSymbol>().ToList();
         }
     }
 }

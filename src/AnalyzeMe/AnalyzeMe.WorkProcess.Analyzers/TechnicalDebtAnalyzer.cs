@@ -50,7 +50,7 @@ namespace AnalyzeMe.WorkProcess.Analyzers
             var attributeSymbol = ctx.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol;
             var arguments = attributeSyntax.ArgumentList;
 
-            if (!attributeSymbol?.ToString().StartsWith("RoslynAnalyzers.TechnicalDebt.TechnicalDebtAttribute") ?? true)
+            if (!attributeSymbol?.ToString().StartsWith("AnalyzeMe.WorkProcess.Tools.TechnicalDebtAttribute") ?? true)
             {
                 return;
             }
