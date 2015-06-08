@@ -23,6 +23,10 @@ namespace TestNamespace
 
         public {propertyModifier}int J { get; set; }
     }
+
+    sealed class DerivedClass : {baseClass}
+    {
+    }
 }";
         private const string ExpectedSealedClass = @"
 namespace TestNamespace
@@ -36,6 +40,10 @@ namespace TestNamespace
 
         public int J { get; set; }
     }
+
+    sealed class DerivedClass : object
+    {
+    }
 }";
 
         [TestMethod]
@@ -45,14 +53,13 @@ namespace TestNamespace
             var staticClassDiagnosticCode = ApplyFormat(classModifier: "static", methodModifier: "static", propertyModifier: "static");
             var abstractClassDiagnosticCode = ApplyFormat(classModifier: "abstract", methodModifier: "abstract");
             var classWithVirtualMethodAndPropertyDiagnosticCode = ApplyFormat(methodModifier: "virtual", propertyModifier: "virtual");
+            var withDerivedTypeDiagnosticCode = ApplyFormat(isBase: true);
 
-            VerifyCSharpDiagnostic(new[]
-            {
-                sealedClassDiagnosticCode,
-                staticClassDiagnosticCode,
-                abstractClassDiagnosticCode,
-                classWithVirtualMethodAndPropertyDiagnosticCode
-            });
+            VerifyCSharpDiagnostic(sealedClassDiagnosticCode);
+            VerifyCSharpDiagnostic(staticClassDiagnosticCode);
+            VerifyCSharpDiagnostic(abstractClassDiagnosticCode);
+            VerifyCSharpDiagnostic(classWithVirtualMethodAndPropertyDiagnosticCode);
+            VerifyCSharpDiagnostic(withDerivedTypeDiagnosticCode);
         }
 
         [TestMethod]
@@ -74,7 +81,7 @@ namespace TestNamespace
             VerifyCSharpFix(source, ExpectedSealedClass);
         }
 
-        private string ApplyFormat(string classModifier = "", string methodModifier = "", string propertyModifier = "")
+        private string ApplyFormat(string classModifier = "", string methodModifier = "", string propertyModifier = "", bool isBase = false)
         {
             var methodBody = methodModifier == "abstract" ? ";" : "{ }";
             Func<string, string> withTrailingTrivia =
@@ -84,7 +91,8 @@ namespace TestNamespace
                 .Replace("{classModifier}", withTrailingTrivia(classModifier))
                 .Replace("{methodModifier}", withTrailingTrivia(methodModifier))
                 .Replace("{methodBody}", withTrailingTrivia(methodBody))
-                .Replace("{propertyModifier}", withTrailingTrivia(propertyModifier));
+                .Replace("{propertyModifier}", withTrailingTrivia(propertyModifier))
+                .Replace("{baseClass}", isBase ? "TestClass" : "object");
         }
 
         protected override CodeFixProvider GetCSharpCodeFixProvider()
