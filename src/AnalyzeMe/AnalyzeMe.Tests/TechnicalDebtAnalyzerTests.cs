@@ -70,7 +70,7 @@ namespace TestNamespace
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 6, 69)
+                            new DiagnosticResultLocation("Test0.cs", 6, 70)
                         }
             };
             
