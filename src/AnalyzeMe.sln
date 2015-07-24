@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.Design.Analyzers", "AnalyzeMe\AnalyzeMe.Design.Analyzers\AnalyzeMe.Design.Analyzers.csproj", "{7B8B5578-7204-46E7-AC4F-C6444E7F48E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.Tests", "AnalyzeMe\AnalyzeMe.Tests\AnalyzeMe.Tests.csproj", "{0C19C121-57E0-4C0D-ACF9-75BBD12FCA54}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.Vsix", "AnalyzeMe\AnalyzeMe.Vsix\AnalyzeMe.Vsix.csproj", "{37BFDBE0-6DED-448A-B7EE-C468050CF256}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.WorkProcess.Analyzers", "AnalyzeMe\AnalyzeMe.WorkProcess.Analyzers\AnalyzeMe.WorkProcess.Analyzers.csproj", "{7EC66ABB-65DF-4C44-B43F-403302B59654}"
 EndProject
@@ -29,10 +27,6 @@ Global
 		{0C19C121-57E0-4C0D-ACF9-75BBD12FCA54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C19C121-57E0-4C0D-ACF9-75BBD12FCA54}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0C19C121-57E0-4C0D-ACF9-75BBD12FCA54}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37BFDBE0-6DED-448A-B7EE-C468050CF256}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37BFDBE0-6DED-448A-B7EE-C468050CF256}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37BFDBE0-6DED-448A-B7EE-C468050CF256}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37BFDBE0-6DED-448A-B7EE-C468050CF256}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7EC66ABB-65DF-4C44-B43F-403302B59654}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7EC66ABB-65DF-4C44-B43F-403302B59654}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EC66ABB-65DF-4C44-B43F-403302B59654}.Release|Any CPU.ActiveCfg = Release|Any CPU
