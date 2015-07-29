@@ -25,8 +25,6 @@ namespace AnalyzeMe.Design.Analyzers
             isEnabledByDefault: true);
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(NullCollectionRule);
 
-        public Action a = () => { };
-
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(x => { }, SyntaxKind.MethodDeclaration, SyntaxKind.FieldDeclaration, SyntaxKind.PropertyDeclaration);

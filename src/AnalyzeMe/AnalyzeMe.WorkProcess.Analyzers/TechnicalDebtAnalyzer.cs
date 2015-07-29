@@ -18,17 +18,16 @@ namespace AnalyzeMe.WorkProcess.Analyzers
     public class TechnicalDebtAnalyzer : DiagnosticAnalyzer
     {
         public const string AttributeUsageDiagnosticId = "TechnicalDebtAttributeUsage";
-        public const string TechnicalDebtExpiredDiagnosticId = "TechnicalDebtExpired";
-        public const string TechnicalDebtExpiredSoonDiagnosticId = "TechnicalDebtExpiredSoon";
-
         internal static readonly LocalizableString AttributeUsageTitle = "Incorrect attribute usage.";
         internal static readonly LocalizableString AttributeUsageMessageFormat = "Attribute usage error: {0}";
         internal const string AttributeUsageCategory = "Usage";
 
+        public const string TechnicalDebtExpiredDiagnosticId = "TechnicalDebtExpired";
         internal static readonly LocalizableString DebtExpiredTitle = "Technical debt expired. Redesign this!";
         internal static readonly LocalizableString DebtExpiredMessageFormat = "Technical debt with reason \'{0}\' already expired.";
         internal static readonly string DebtExpiredCategory = "Design";
 
+        public const string TechnicalDebtExpiredSoonDiagnosticId = "TechnicalDebtExpiredSoon";
         internal static readonly LocalizableString DebtExpiredSoonTitle = "Technical debt expired soon. Redesign this!";
         internal static readonly LocalizableString DebtExpiredSoonMessageFormat = "Technical debt with reason \'{0}\' expired after {1} days.";
         internal static readonly string DebtExpiredSoonCategory = "Design";

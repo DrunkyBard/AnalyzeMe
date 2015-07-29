@@ -54,7 +54,7 @@ namespace TestNamespace
             
             VerifyCSharpDiagnostic(diagnosticCode, expected);
         }
-
+        
         [TestMethod]
         public void ExpectWrongReasonDiagnostic()
         {

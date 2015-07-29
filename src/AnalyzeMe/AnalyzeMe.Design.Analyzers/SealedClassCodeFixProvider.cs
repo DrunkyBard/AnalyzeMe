@@ -34,7 +34,7 @@ namespace AnalyzeMe.Design.Analyzers
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
             context.RegisterCodeFix(
-                CodeAction.Create("Mark as sealed", c => Task.FromResult(updatedDocument)),
+                CodeAction.Create("Mark as sealed", c => Task.FromResult(updatedDocument), "MarkClassWithSealedModifier"),
                 diagnostic);
         }
     }
