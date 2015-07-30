@@ -23,19 +23,25 @@ namespace AnalyzeMe.Design.Analyzers
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(Action1, SyntaxKind.InvocationExpression);
+            context.RegisterSyntaxNodeAction(AnalyzeMethodInvocation, SyntaxKind.InvocationExpression);
             //context.RegisterSymbolAction(Action, SymbolKind.Method);
         }
 
-        private void Action1(SyntaxNodeAnalysisContext ctx)
+        private void AnalyzeMethodInvocation(SyntaxNodeAnalysisContext ctx)
         {
-            var methodInvokationSymbol = ctx.SemanticModel.GetSymbolInfo(ctx.Node);
-            var n = ctx.Node;
-        }
+            var methodInvokationSymbol = (IMethodSymbol)ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol;
+            const string observableExtensionsTypeName = "System.ObservableExtensions";
+            const string subscribeMethodName = "Subscribe";
 
-        private void Action(SymbolAnalysisContext ctx)
-        {
-            var methodCallSymbol = ctx.Symbol;
+            if (
+                methodInvokationSymbol.Name != subscribeMethodName ||
+                !methodInvokationSymbol.IsExtensionMethod || 
+                !methodInvokationSymbol.IsGenericMethod ||
+                methodInvokationSymbol.ContainingType?.ToDisplayString() != observableExtensionsTypeName
+                )
+            {
+                return;
+            }
         }
     }
 }

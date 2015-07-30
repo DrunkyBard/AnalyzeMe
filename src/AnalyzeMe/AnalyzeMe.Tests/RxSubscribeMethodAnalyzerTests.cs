@@ -38,7 +38,7 @@ namespace Test
         public void Bar()
         {
             IObservable<object> obs = null;
-            obs.Subscribe(_ => {});
+            obs.Subscribe<object>(_ => {});
         }
     }
 }
