@@ -38,14 +38,16 @@ namespace Test
         public void Bar()
         {
             IObservable<object> obs = null;
-            obs.Subscribe<object>(_ => {});
+            obs.Subscribe(onError: _ => { }, onNext: _ => { }, onCompleted: () => { });
+            //obs.Subscribe<object>(_ => {});
+            //obs.Subscribe(_ => { });
+            obs.Subscribe(_ => { }, _ => { }, () => { });
         }
     }
-}
-";
+}";
 
         [TestMethod]
-        public void Test()
+        public void ExpectNoDiagnostic()
         {
             var expected = new DiagnosticResult
             {
@@ -54,11 +56,11 @@ namespace Test
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 6, 70)
+                            new DiagnosticResultLocation("Test0.cs", 29, 13)
                         }
             };
 
-            VerifyCSharpDiagnostic(Code, expected);
+            VerifyCSharpDiagnostic(Code);
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
