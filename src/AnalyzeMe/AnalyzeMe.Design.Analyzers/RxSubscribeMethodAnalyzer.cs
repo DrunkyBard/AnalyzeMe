@@ -2,7 +2,6 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace AnalyzeMe.Design.Analyzers
@@ -18,8 +17,9 @@ namespace AnalyzeMe.Design.Analyzers
         private const string OnErrorParameterName = "onError";
 
         public const string RxSubscribeMethodDiagnosticId = "RxSubscribeMethodUsage";
-        internal static readonly LocalizableString RxSubscribeMethodTitle = "Placeholder";
-        internal static readonly LocalizableString RxSubscribeMessageFormat = "Placeholder";
+        internal static readonly LocalizableString RxSubscribeMethodTitle = @"""Subscribe"" method usage without OnError parameter";
+        internal static readonly LocalizableString RxSubscribeMessageFormat = 
+            @"Potentially dangerous ""Subscribe"" method invocation: if you use an overload that does not specify a delegate for the OnError notification, any OnError notifications will be re-thrown as an exception.";
         internal const string RxSubscribeMethodCategory = "Usage";
         internal static readonly DiagnosticDescriptor RxSubscribeMethodRule = new DiagnosticDescriptor(
             RxSubscribeMethodDiagnosticId,
@@ -32,13 +32,11 @@ namespace AnalyzeMe.Design.Analyzers
 
         public override void Initialize(AnalysisContext context)
         {
-            //context.RegisterSyntaxNodeAction(AnalyzeMethodInvocation, SyntaxKind.InvocationExpression);
-            context.RegisterSyntaxNodeAction(AnalyzeMethodInvocation, SyntaxKind.SimpleMemberAccessExpression);
-            //context.RegisterSymbolAction(Action, SymbolKind.Method);
+            context.RegisterSyntaxNodeAction(AnalyzeMethodInvocation, SyntaxKind.InvocationExpression);
         }
 
         private void AnalyzeMethodInvocation(SyntaxNodeAnalysisContext ctx)
-        {
+        {            
             var methodInvokationSymbol = (IMethodSymbol)ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol;
             
             if (

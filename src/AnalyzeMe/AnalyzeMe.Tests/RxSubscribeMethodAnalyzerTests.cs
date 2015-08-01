@@ -1,5 +1,4 @@
-﻿using System;
-using AnalyzeMe.Design.Analyzers;
+﻿using AnalyzeMe.Design.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,8 +9,8 @@ namespace AnalyzeMe.Tests
     [TestClass]
     public sealed class RxSubscribeMethodAnalyzerTests : CodeFixVerifier
     {
-        private const string Code = @"
-using System;
+        private const string Source =
+@"using System;
 
 namespace System
 {
@@ -37,30 +36,49 @@ namespace Test
     {
         public void Bar()
         {
-            IObservable<object> obs = null;
-            obs.Subscribe(onError: _ => { }, onNext: _ => { }, onCompleted: () => { });
-            //obs.Subscribe<object>(_ => {});
-            //obs.Subscribe(_ => { });
-            obs.Subscribe(_ => { }, _ => { }, () => { });
+            IObservable<object> observable = null;
+            {0}
         }
     }
 }";
 
         [TestMethod]
-        public void ExpectNoDiagnostic()
+        public void WhenOnErrorParameterExists_ThenExpectNoDiagnostic()
         {
-            var expected = new DiagnosticResult
+            var source = Source.Replace(@"{0}",
+            @"observable.Subscribe(onError: _ => { }, onNext: _ => { }, onCompleted: () => { });
+            observable.Subscribe(nextValue => { }, ex => { }, () => { });
+            observable.Subscribe(nextValue => { }, ex => { });");
+
+            VerifyCSharpDiagnostic(source);
+        }
+
+        [TestMethod]
+        public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
+        {
+            var source = Source.Replace(@"{0}",
+            @"observable.Subscribe(nextValue => {});
+            observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
+            observable.Subscribe(nextValue => {}, () => {});");
+            var firstSubscribeMethodInvocationDiagnostic = CreateDiagnostic(28, 13);
+            var secondSubscribeMethodInvocationDiagnostic = CreateDiagnostic(29, 13);
+            var thirdSubscribeMethodInvocationDiagnostic = CreateDiagnostic(30, 13);
+
+            VerifyCSharpDiagnostic(source, firstSubscribeMethodInvocationDiagnostic, secondSubscribeMethodInvocationDiagnostic, thirdSubscribeMethodInvocationDiagnostic);
+        }
+
+        private DiagnosticResult CreateDiagnostic(int line, int column)
+        {
+            return new DiagnosticResult
             {
                 Id = RxSubscribeMethodAnalyzer.RxSubscribeMethodDiagnosticId,
-                Message = "Placeholder",
+                Message = @"""Subscribe"" method usage without OnError parameter",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 29, 13)
-                        }
+                     new[] {
+                            new DiagnosticResultLocation("Test0.cs", line, column),
+                         }
             };
-
-            VerifyCSharpDiagnostic(Code);
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
