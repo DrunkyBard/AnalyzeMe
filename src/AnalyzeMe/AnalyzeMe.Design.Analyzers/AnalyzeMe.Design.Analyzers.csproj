@@ -45,6 +45,7 @@
     <Compile Include="NullCollectionMethodCodeFixProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RxSubscribeMethodAnalyzer.cs" />
+    <Compile Include="RxSubscribeMethodCodeFixProvider.cs" />
     <Compile Include="SealedClassAnalyzer.cs" />
     <Compile Include="SealedClassCodeFixProvider.cs" />
     <Compile Include="Utils\FunctionalProgrammingFeatures.cs" />
