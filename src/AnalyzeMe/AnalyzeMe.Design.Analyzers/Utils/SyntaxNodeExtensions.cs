@@ -4,13 +4,10 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
     public static class SyntaxNodeExtensions
     {
-        public static Workspace TryGetWorkspace(this SyntaxNode node)
+        public static bool TryGetWorkspace(this SyntaxNode node, out Workspace workspace)
         {
             var syntaxTreeContainer = node.SyntaxTree.GetText().Container;
-            Workspace workspace;
-            Workspace.TryGetWorkspace(syntaxTreeContainer, out workspace);
-
-            return workspace;
+            return Workspace.TryGetWorkspace(syntaxTreeContainer, out workspace);
         }
     }
 }

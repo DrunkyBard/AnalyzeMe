@@ -36,9 +36,9 @@ namespace AnalyzeMe.Design.Analyzers
         {
             var classDeclarationNode = (ClassDeclarationSyntax)ctx.Node;
             var classDeclarationSymbol = ctx.SemanticModel.GetDeclaredSymbol(classDeclarationNode);
-            var workspace = classDeclarationNode.TryGetWorkspace();
+            Workspace workspace;
 
-            if (IsAbstractStaticOrSealed(classDeclarationSymbol) || workspace == null)
+            if (IsAbstractStaticOrSealed(classDeclarationSymbol) || !classDeclarationNode.TryGetWorkspace(out workspace))
             {
                 return;
             }
