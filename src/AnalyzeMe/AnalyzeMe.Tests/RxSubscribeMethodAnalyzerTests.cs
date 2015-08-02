@@ -1,5 +1,6 @@
 ﻿using AnalyzeMe.Design.Analyzers;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
@@ -56,14 +57,17 @@ namespace Test
         [TestMethod]
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
         {
+            //var source = Source.Replace(@"{0}",
+            //@"observable.Subscribe(nextValue => {});
+            //observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
+            //observable.Subscribe(nextValue => {}, () => {});");
             var source = Source.Replace(@"{0}",
-            @"observable.Subscribe(nextValue => {});
-            observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
-            observable.Subscribe(nextValue => {}, () => {});");
+            @"observable.Subscribe(onNext: _ => {}, onCompleted: () => {});");
             var firstSubscribeMethodInvocationDiagnostic = CreateDiagnostic(28, 13);
             var secondSubscribeMethodInvocationDiagnostic = CreateDiagnostic(29, 13);
             var thirdSubscribeMethodInvocationDiagnostic = CreateDiagnostic(30, 13);
 
+            VerifyCSharpFix(source, "");
             VerifyCSharpDiagnostic(source, firstSubscribeMethodInvocationDiagnostic, secondSubscribeMethodInvocationDiagnostic, thirdSubscribeMethodInvocationDiagnostic);
         }
 
@@ -72,7 +76,7 @@ namespace Test
             return new DiagnosticResult
             {
                 Id = RxSubscribeMethodAnalyzer.RxSubscribeMethodDiagnosticId,
-                Message = @"""Subscribe"" method usage without OnError parameter",
+                Message = RxSubscribeMethodAnalyzer.RxSubscribeMessageFormat.ToString(),
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                      new[] {
@@ -84,6 +88,11 @@ namespace Test
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
             return new RxSubscribeMethodAnalyzer();
+        }
+
+        protected override CodeFixProvider GetCSharpCodeFixProvider()
+        {
+            return new RxSubscribeMethodCodeFixProvider();
         }
     }
 }

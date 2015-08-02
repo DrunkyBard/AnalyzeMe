@@ -37,10 +37,10 @@ namespace AnalyzeMe.Design.Analyzers
 
         private void AnalyzeMethodInvocation(SyntaxNodeAnalysisContext ctx)
         {            
-            var methodInvokationSymbol = (IMethodSymbol)ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol;
+            var methodInvokationSymbol = ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol as IMethodSymbol;
             
             if (
-                methodInvokationSymbol.Name != SubscribeMethodName ||
+                methodInvokationSymbol?.Name != SubscribeMethodName ||
                 !methodInvokationSymbol.IsExtensionMethod || 
                 !methodInvokationSymbol.IsGenericMethod ||
                 methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||      
