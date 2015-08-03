@@ -14,10 +14,11 @@ namespace AnalyzeMe.Design.Analyzers
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RxSubscribeMethodCodeFixProvider)), Shared]
     public sealed class RxSubscribeMethodCodeFixProvider : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RxSubscribeMethodAnalyzer.RxSubscribeMethodDiagnosticId);
+        public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RxSubscribeMethodAnalyzer.RxSubscribeMethodDiagnosticId);
         private SyntaxTrivia WhiteSpace => SyntaxFactory.Whitespace(" ");
+        private string MethodBodyComment => @"/*TODO: handle this!*/";
 
-        public sealed override FixAllProvider GetFixAllProvider()
+        public override FixAllProvider GetFixAllProvider()
         {
             return WellKnownFixAllProviders.BatchFixer;
         }
@@ -27,13 +28,18 @@ namespace AnalyzeMe.Design.Analyzers
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
-            var subscribeMethodInvocation = (InvocationExpressionSyntax)root.FindNode(diagnosticSpan);
+            var subscribeMethodInvocation = root.FindNode(diagnosticSpan) as InvocationExpressionSyntax; //TODO: Resolve uncompleted invocation expression
+
+            if (subscribeMethodInvocation == null)
+            {
+                return;
+            }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
-            var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments.WithAdditionalAnnotations(Formatter.Annotation));
+            var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
             context.RegisterCodeFix(
@@ -44,43 +50,51 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentListSyntax CreateNamedArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             var onErrorNameColon = SyntaxFactory.NameColon("onError");
-            var nopToken = SyntaxFactory.Token(SyntaxKind.None);
-            var parameter = SyntaxFactory
-                .Parameter(SyntaxFactory.Identifier("e"))
-                .WithLeadingTrivia(SyntaxFactory.Whitespace(" "));
-            var lambdaBodyToken = SyntaxFactory.Token
-                (
-                    SyntaxFactory.TriviaList(),
-                    SyntaxKind.OpenBraceToken,
-                    SyntaxFactory.TriviaList
-                        (
-                            WhiteSpace,
-                            SyntaxFactory.Comment
-                                (
-                                    @"/*TODO: handle this!*/"
-                                ),
-                            WhiteSpace
-                        )
-                );
-            var lambdaBody = SyntaxFactory.Block()
-                .WithOpenBraceToken(lambdaBodyToken)
-                .WithCloseBraceToken(SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
-            var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
-                .WithArrowToken(
-                    SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
-                        .WithLeadingTrivia(WhiteSpace)
-                        .WithTrailingTrivia(WhiteSpace));
-            var onErrorArgument = 
-                SyntaxFactory
-                .Argument(onErrorNameColon, nopToken, lambdaExpression)
-                .WithLeadingTrivia(WhiteSpace);
+            var onErrorArgument = CreateOnErrorLambdaArgument(onErrorNameColon);
 
             return oldArguments.AddArguments(onErrorArgument);
         }
 
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
-            return null;
+            var onNextArgument = oldArguments.Arguments.First();
+            var onErrorArgument = CreateOnErrorLambdaArgument();
+            var afterOnNextArguments = oldArguments.Arguments.Skip(1);
+            var subscribeMethodArguments = new[]
+            {
+                onNextArgument,
+                onErrorArgument
+            }.Union(afterOnNextArguments);
+
+            return oldArguments.WithArguments(SyntaxFactory.SeparatedList(subscribeMethodArguments));
+        }
+
+        private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
+        {
+            var onErrorNameColon = nameColon;
+            var parameter = SyntaxFactory
+                .Parameter(SyntaxFactory.Identifier("ex"))
+                .WithLeadingTrivia(WhiteSpace);
+            var lambdaBodyToken = SyntaxFactory.Token
+                (
+                    SyntaxFactory.TriviaList(),
+                    SyntaxKind.OpenBraceToken,
+                    SyntaxFactory.TriviaList(WhiteSpace, SyntaxFactory.Comment(MethodBodyComment), WhiteSpace)
+                );
+            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, new SyntaxList<StatementSyntax>(), SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
+            var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
+                .WithArrowToken(
+                    SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
+                        .WithLeadingTrivia(WhiteSpace)
+                        .WithTrailingTrivia(WhiteSpace));
+            var nopToken = SyntaxFactory.Token(SyntaxKind.None);
+            var onErrorArgument =
+                SyntaxFactory
+                .Argument(onErrorNameColon, nopToken, lambdaExpression)
+                .WithLeadingTrivia(WhiteSpace)
+                .WithAdditionalAnnotations(Formatter.Annotation);
+
+            return onErrorArgument;
         }
     }
 }

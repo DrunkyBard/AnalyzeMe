@@ -57,18 +57,24 @@ namespace Test
         [TestMethod]
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
         {
-            //var source = Source.Replace(@"{0}",
-            //@"observable.Subscribe(nextValue => {});
-            //observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
-            //observable.Subscribe(nextValue => {}, () => {});");
-            var source = Source.Replace(@"{0}",
-            @"observable.Subscribe(onNext: _ => {}, onCompleted: () => {});");
+            var originSource = Source.Replace(@"{0}",
+            @"
+            observable.Subscribe(_ => { },  () => { Console.WriteLine("");});
+            observable.Subscribe(nextValue => {});
+            observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
+            observable.Subscribe(nextValue => {}, () => {});");
+
+            var expectedSource = Source.Replace(@"{0}",
+            @"observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {}, onError: ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ }, () => {});");
+
             var firstSubscribeMethodInvocationDiagnostic = CreateDiagnostic(28, 13);
             var secondSubscribeMethodInvocationDiagnostic = CreateDiagnostic(29, 13);
             var thirdSubscribeMethodInvocationDiagnostic = CreateDiagnostic(30, 13);
 
-            VerifyCSharpFix(source, "");
-            VerifyCSharpDiagnostic(source, firstSubscribeMethodInvocationDiagnostic, secondSubscribeMethodInvocationDiagnostic, thirdSubscribeMethodInvocationDiagnostic);
+            VerifyCSharpFix(originSource, expectedSource);
+            VerifyCSharpDiagnostic(originSource, firstSubscribeMethodInvocationDiagnostic, secondSubscribeMethodInvocationDiagnostic, thirdSubscribeMethodInvocationDiagnostic);
         }
 
         private DiagnosticResult CreateDiagnostic(int line, int column)

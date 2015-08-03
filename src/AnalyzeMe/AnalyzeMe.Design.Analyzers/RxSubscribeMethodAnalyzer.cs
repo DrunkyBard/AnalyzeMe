@@ -18,7 +18,7 @@ namespace AnalyzeMe.Design.Analyzers
 
         public const string RxSubscribeMethodDiagnosticId = "RxSubscribeMethodUsage";
         internal static readonly LocalizableString RxSubscribeMethodTitle = @"""Subscribe"" method usage without OnError parameter";
-        internal static readonly LocalizableString RxSubscribeMessageFormat = 
+        internal static readonly LocalizableString RxSubscribeMessageFormat =
             @"Potentially dangerous ""Subscribe"" method invocation: if you use an overload that does not specify a delegate for the OnError notification, any OnError notifications will be re-thrown as an exception.";
         internal const string RxSubscribeMethodCategory = "Usage";
         internal static readonly DiagnosticDescriptor RxSubscribeMethodRule = new DiagnosticDescriptor(
@@ -36,14 +36,14 @@ namespace AnalyzeMe.Design.Analyzers
         }
 
         private void AnalyzeMethodInvocation(SyntaxNodeAnalysisContext ctx)
-        {            
+        {
             var methodInvokationSymbol = ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol as IMethodSymbol;
-            
+
             if (
                 methodInvokationSymbol?.Name != SubscribeMethodName ||
-                !methodInvokationSymbol.IsExtensionMethod || 
+                !methodInvokationSymbol.IsExtensionMethod ||
                 !methodInvokationSymbol.IsGenericMethod ||
-                methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||      
+                methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||
                 methodInvokationSymbol.ReturnType.ToDisplayString() != DisposableTypeName ||
                 methodInvokationSymbol.ContainingType?.ToDisplayString() != ObservableExtensionsTypeName
                 )
@@ -53,9 +53,9 @@ namespace AnalyzeMe.Design.Analyzers
 
             var parameters = methodInvokationSymbol.Parameters;
             var subscribeInvokationContainsOnErrorParameter = parameters
-                .Any(p => 
-                    p.Name == OnErrorParameterName && 
-                    p.Type.OriginalDefinition.ToDisplayString() == ActionOfTTypeName && 
+                .Any(p =>
+                    p.Name == OnErrorParameterName &&
+                    p.Type.OriginalDefinition.ToDisplayString() == ActionOfTTypeName &&
                     ((INamedTypeSymbol)p.Type).TypeArguments.SingleOrDefault(t => t.ToDisplayString() == ExceptionTypeName) != null);
 
             if (!subscribeInvokationContainsOnErrorParameter)
