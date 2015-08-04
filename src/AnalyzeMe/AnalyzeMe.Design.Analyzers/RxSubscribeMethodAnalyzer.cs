@@ -39,14 +39,13 @@ namespace AnalyzeMe.Design.Analyzers
         {
             var methodInvokationSymbol = ctx.SemanticModel.GetSymbolInfo(ctx.Node).Symbol as IMethodSymbol;
 
-            if (
-                methodInvokationSymbol?.Name != SubscribeMethodName ||
+            if (methodInvokationSymbol?.Name != SubscribeMethodName ||
                 !methodInvokationSymbol.IsExtensionMethod ||
                 !methodInvokationSymbol.IsGenericMethod ||
                 methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||
                 methodInvokationSymbol.ReturnType.ToDisplayString() != DisposableTypeName ||
-                methodInvokationSymbol.ContainingType?.ToDisplayString() != ObservableExtensionsTypeName
-                )
+                methodInvokationSymbol.ContainingType?.ToDisplayString() != ObservableExtensionsTypeName ||
+                !methodInvokationSymbol.Parameters.Any())
             {
                 return;
             }

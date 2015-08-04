@@ -17,6 +17,9 @@ namespace System
 {
     public static class ObservableExtensions
     {
+        public static IDisposable Subscribe<T>(this IObservable<T> source)
+        { return null; }
+
         public static IDisposable Subscribe<T>(this IObservable<T> source, Action<T> onNext)
         { return null; }
 
@@ -58,16 +61,18 @@ namespace Test
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
         {
             var originSource = Source.Replace(@"{0}",
-            @"
-            observable.Subscribe(_ => { },  () => { Console.WriteLine("");});
+            @"observable.Subscribe(
+                nextValue => {Console.WriteLine(string.Format(""{0}"", ""acb""))}, 
+                () => {});
             observable.Subscribe(nextValue => {});
             observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
-            observable.Subscribe(nextValue => {}, () => {});");
+            ");
 
             var expectedSource = Source.Replace(@"{0}",
-            @"observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ });
+            @"observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ }, () => {});
+            observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ });
             observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {}, onError: ex => { /*TODO: handle this!*/ });
-            observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ }, () => {});");
+            ");
 
             var firstSubscribeMethodInvocationDiagnostic = CreateDiagnostic(28, 13);
             var secondSubscribeMethodInvocationDiagnostic = CreateDiagnostic(29, 13);

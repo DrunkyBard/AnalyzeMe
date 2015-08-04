@@ -28,7 +28,7 @@ namespace AnalyzeMe.Design.Analyzers
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
-            var subscribeMethodInvocation = root.FindNode(diagnosticSpan) as InvocationExpressionSyntax; //TODO: Resolve uncompleted invocation expression
+            var subscribeMethodInvocation = root.FindNode(diagnosticSpan) as InvocationExpressionSyntax;
 
             if (subscribeMethodInvocation == null)
             {
@@ -36,6 +36,7 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
+
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
@@ -43,7 +44,7 @@ namespace AnalyzeMe.Design.Analyzers
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
             context.RegisterCodeFix(
-                CodeAction.Create("Add onError parameter.", c => Task.FromResult(updatedDocument), "AddSubscribeOnErrorParameter"),
+                CodeAction.Create("Add onError parameter", c => Task.FromResult(updatedDocument), "AddSubscribeOnErrorParameter"),
                 diagnostic);
         }
 
@@ -58,15 +59,33 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             var onNextArgument = oldArguments.Arguments.First();
-            var onErrorArgument = CreateOnErrorLambdaArgument();
             var afterOnNextArguments = oldArguments.Arguments.Skip(1);
+            //var a = afterOnNextArguments.FirstOrDefault()?.GetLeadingTrivia().
+            var onErrorArgument = CreateOnErrorLambdaArgument();
             var subscribeMethodArguments = new[]
             {
                 onNextArgument,
                 onErrorArgument
             }.Union(afterOnNextArguments);
 
-            return oldArguments.WithArguments(SyntaxFactory.SeparatedList(subscribeMethodArguments));
+            var onNextCommaToken = oldArguments
+                .ChildTokens()
+                .FirstOrDefault(t => t.IsKind(SyntaxKind.CommaToken));
+            var onErrorCommaToken = SyntaxFactory
+                .Token(SyntaxKind.CommaToken)
+                .WithTriviaFrom(onNextCommaToken);
+            var otherArgumentCommaTokens = oldArguments
+                .ChildTokens()
+                .Where(t => t.IsKind(SyntaxKind.CommaToken))
+                .Skip(1);
+
+            var argumentCommaTokens = new[]
+            {
+                onNextCommaToken,
+                onErrorCommaToken
+            }.Union(otherArgumentCommaTokens);
+
+            return oldArguments.WithArguments(SyntaxFactory.SeparatedList(subscribeMethodArguments, argumentCommaTokens));
         }
 
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
@@ -81,7 +100,7 @@ namespace AnalyzeMe.Design.Analyzers
                     SyntaxKind.OpenBraceToken,
                     SyntaxFactory.TriviaList(WhiteSpace, SyntaxFactory.Comment(MethodBodyComment), WhiteSpace)
                 );
-            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, new SyntaxList<StatementSyntax>(), SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
+            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, default(SyntaxList<StatementSyntax>), SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
             var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
                 .WithArrowToken(
                     SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
@@ -93,7 +112,7 @@ namespace AnalyzeMe.Design.Analyzers
                 .Argument(onErrorNameColon, nopToken, lambdaExpression)
                 .WithLeadingTrivia(WhiteSpace)
                 .WithAdditionalAnnotations(Formatter.Annotation);
-
+            
             return onErrorArgument;
         }
     }
