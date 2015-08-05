@@ -61,7 +61,9 @@ namespace Test
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
         {
             var originSource = Source.Replace(@"{0}",
-            @"observable.Subscribe(
+            @"
+            //observable.Subscribe(_ => {});
+            observable.Subscribe(
                 nextValue => {Console.WriteLine(string.Format(""{0}"", ""acb""))}, 
                 () => {});
             observable.Subscribe(nextValue => {});

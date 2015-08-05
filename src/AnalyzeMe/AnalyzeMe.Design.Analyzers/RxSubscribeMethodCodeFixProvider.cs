@@ -1,7 +1,9 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
+using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -59,9 +61,9 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             var onNextArgument = oldArguments.Arguments.First();
-            var afterOnNextArguments = oldArguments.Arguments.Skip(1);
+            var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             //var a = afterOnNextArguments.FirstOrDefault()?.GetLeadingTrivia().
-            var onErrorArgument = CreateOnErrorLambdaArgument();
+            var onErrorArgument = FormatOnErrorArgument(CreateOnErrorLambdaArgument(), onNextArgument, afterOnNextArguments.FirstOrDefault());
             var subscribeMethodArguments = new[]
             {
                 onNextArgument,
@@ -78,14 +80,35 @@ namespace AnalyzeMe.Design.Analyzers
                 .ChildTokens()
                 .Where(t => t.IsKind(SyntaxKind.CommaToken))
                 .Skip(1);
-
+            
             var argumentCommaTokens = new[]
             {
-                onNextCommaToken,
-                onErrorCommaToken
+                onNextCommaToken.Kind() == SyntaxKind.None ? SyntaxFactory.Token(SyntaxKind.CommaToken) : onNextCommaToken,
+                onNextCommaToken.Kind() == SyntaxKind.None ? SyntaxFactory.Token(SyntaxKind.CommaToken) : onErrorCommaToken,
             }.Union(otherArgumentCommaTokens);
 
             return oldArguments.WithArguments(SyntaxFactory.SeparatedList(subscribeMethodArguments, argumentCommaTokens));
+        }
+
+        private ArgumentSyntax FormatOnErrorArgument(ArgumentSyntax onErrorArgument, ArgumentSyntax onNextArgument, ArgumentSyntax firstArgumentAfterOnNext = null)
+        {
+            SyntaxTrivia whitespace;
+
+            if (onNextArgument.HasLeadingTrivia)
+            {
+                whitespace = onNextArgument.ExtractWhitespace();
+
+                return onErrorArgument.WithLeadingTrivia(whitespace);
+            }
+
+            if (firstArgumentAfterOnNext != null && firstArgumentAfterOnNext.HasLeadingTrivia)
+            {
+                whitespace = firstArgumentAfterOnNext.ExtractWhitespace();
+
+                return onErrorArgument.WithLeadingTrivia(whitespace);
+            }
+
+            return onErrorArgument;
         }
 
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
