@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AnalyzeMe.Design.Analyzers.Utils
 {
@@ -25,15 +26,31 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentNullException(nameof(node));
             }
 
-            if (!node.HasLeadingTrivia)
+            var whitespaceExtractor = new WhitespaceExtractor();
+
+            return whitespaceExtractor.Visit(node);
+        }
+
+        public static SyntaxToken GetAssociatedComma(this ArgumentSyntax argument)
+        {
+            if (argument == null)
             {
-                return SyntaxFactory.Whitespace(String.Empty);
+                throw new ArgumentNullException(nameof(argument));
             }
 
-            var leadingTriviaLength = node.GetLeadingTrivia().Span.Length;
-            var fullWhitespace = string.Concat(Enumerable.Repeat(" ", leadingTriviaLength));
+            var argumentList = argument.Parent as ArgumentListSyntax;
 
-            return SyntaxFactory.Whitespace(fullWhitespace);
+            if (argumentList == null || argumentList.Arguments.Count <= 1)
+            {
+                return SyntaxFactory.Token(SyntaxKind.None);
+            }
+
+            var commaIndex = argumentList
+                .Arguments
+                .TakeWhile(arg => arg != argument)
+                .Count() - 1;   // First argument has no associated comma, so CommaIndex for this argument equal -1
+
+            return argumentList.Arguments.GetSeparator(commaIndex);
         }
     }
 }

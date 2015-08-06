@@ -63,8 +63,7 @@ namespace Test
             var originSource = Source.Replace(@"{0}",
             @"
             //observable.Subscribe(_ => {});
-            observable.Subscribe(
-                nextValue => {Console.WriteLine(string.Format(""{0}"", ""acb""))}, 
+            observable.Subscribe(nextValue => {Console.WriteLine(string.Format(""{0}"", ""acb""))}, 
                 () => {});
             observable.Subscribe(nextValue => {});
             observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
