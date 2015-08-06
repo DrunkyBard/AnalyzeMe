@@ -42,9 +42,9 @@ namespace AnalyzeMe.Design.Analyzers
             if (methodInvokationSymbol?.Name != SubscribeMethodName ||
                 !methodInvokationSymbol.IsExtensionMethod ||
                 !methodInvokationSymbol.IsGenericMethod ||
-                methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||
-                methodInvokationSymbol.ReturnType.ToDisplayString() != DisposableTypeName ||
-                methodInvokationSymbol.ContainingType?.ToDisplayString() != ObservableExtensionsTypeName ||
+                 methodInvokationSymbol.ReturnType.TypeKind != TypeKind.Interface ||
+                 methodInvokationSymbol.ReturnType.ToDisplayString() != DisposableTypeName ||
+                 methodInvokationSymbol.ContainingType?.ToDisplayString() != ObservableExtensionsTypeName ||
                 !methodInvokationSymbol.Parameters.Any())
             {
                 return;
