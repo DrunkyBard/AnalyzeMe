@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.MSBuild;
 
 namespace AnalyzeMe.Design.Analyzers
 {
@@ -39,7 +40,7 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
-
+            
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
@@ -73,6 +74,11 @@ namespace AnalyzeMe.Design.Analyzers
 
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
+            var lal = @"(nextValue => { Console.WriteLine(); },
+                ex => { /*TODO: handle this!*/ },
+                () => { /*Some comment*/ })";
+            var j = SyntaxFactory.ParseArgumentList(lal);
+            return j;
             var onNextArgument = oldArguments.Arguments.First();
             var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
@@ -149,7 +155,8 @@ namespace AnalyzeMe.Design.Analyzers
         {
             var onErrorNameColon = nameColon;
             var parameter = SyntaxFactory
-                .Parameter(SyntaxFactory.Identifier("ex"));
+                .Parameter(SyntaxFactory.Identifier("ex"))
+                .WithTrailingTrivia(WhiteSpace);
                 //.WithLeadingTrivia(WhiteSpace);
             var lambdaBodyToken = SyntaxFactory.Token
                 (
@@ -161,7 +168,6 @@ namespace AnalyzeMe.Design.Analyzers
             var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
                 .WithArrowToken(
                     SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
-                        .WithLeadingTrivia(WhiteSpace)
                         .WithTrailingTrivia(WhiteSpace));
             var nopToken = SyntaxFactory.Token(SyntaxKind.None);
             var onErrorArgument = SyntaxFactory.Argument(onErrorNameColon, nopToken, lambdaExpression);

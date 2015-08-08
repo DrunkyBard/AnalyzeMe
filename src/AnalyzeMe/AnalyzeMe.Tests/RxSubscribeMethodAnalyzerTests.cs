@@ -81,14 +81,14 @@ namespace Test
     //                            onCompleted: () => {
     //                               Console.WriteLine();
     //                            }, 
-    ///* Comment before onNext*/  onNext: nextValue => { 
+    // /* Comment before onNext*/ onNext: nextValue => { 
     //                                Console.WriteLine(); 
     //                            });
     //        ");
 
             var originSource = Source.Replace(@"{0}",
             @"observable.Subscribe(nextValue => { Console.WriteLine(); }, 
-                            () => { /*Some comment*/ });
+                () => { /*Some comment*/ });
             observable.Subscribe(
                             nextValue => { Console.WriteLine(); }, 
                             () => { /*Some comment*/ });
