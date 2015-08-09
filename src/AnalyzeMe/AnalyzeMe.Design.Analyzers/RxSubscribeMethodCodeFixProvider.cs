@@ -113,7 +113,17 @@ namespace AnalyzeMe.Design.Analyzers
                 afterOnNextCommaToken = firstAfterOnNextArg.GetAssociatedComma();
             }
 
-            var trailingCommaTokenTrivia = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
+            //TODO: Comma after onNext parameter should derive trailing trivia from onNext parameter
+            //TODO: for example: onNext: _ => {} /* Some trailing trivias*/ -> onNext: _ => {}, /* Some trailing trivias*/
+            //TODO: or observable.Subscribe( /* Comment before onNext */
+            //TODO:                             nextValue => { }  /*Some trailing trivias*/
+            //TODO:    ); 
+            //TODO:    should be:
+            //TODO:    observable.Subscribe( /* Comment before onNext */
+            //TODO:                             nextValue => { },  /*Some trailing trivias*/
+            //TODO:                             ex => {}
+            //TODO:    );
+            var trailingCommaTokenTrivia = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia) 
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
             var onErrorCommaToken = SyntaxFactory
