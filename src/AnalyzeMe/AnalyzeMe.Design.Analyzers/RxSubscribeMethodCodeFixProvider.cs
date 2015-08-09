@@ -44,9 +44,22 @@ namespace AnalyzeMe.Design.Analyzers
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
+            var lal = @"(nextValue => { Console.WriteLine(); },
+
+                ex => { /*TODO: handle this!*/ }, 
+                () => { /*Some comment*/ })";
+            var j = SyntaxFactory.ParseArgumentList(lal);
+
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
+            updatedRoot = updatedRoot.WithoutAnnotations(Formatter.Annotation);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
+
+            var updatedRoot1 = root.ReplaceNode(methodArguments, j);
+            var updatedDocument1 = context.Document.WithSyntaxRoot(updatedRoot1);
+            var changes = updatedDocument1.GetTextChangesAsync(updatedDocument).Result;
             
+            
+
             context.RegisterCodeFix(
                 CodeAction.Create("Add onError parameter", c => Task.FromResult(updatedDocument), "AddSubscribeOnErrorParameter"),
                 diagnostic);
@@ -74,11 +87,11 @@ namespace AnalyzeMe.Design.Analyzers
 
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
-            var lal = @"(nextValue => { Console.WriteLine(); },
-                ex => { /*TODO: handle this!*/ },
-                () => { /*Some comment*/ })";
-            var j = SyntaxFactory.ParseArgumentList(lal);
-            return j;
+            //var lal = @"(nextValue => { Console.WriteLine(); },
+            //    ex => { /*TODO: handle this!*/ }, 
+            //    () => { /*Some comment*/ })";
+            //var j = SyntaxFactory.ParseArgumentList(lal);
+            //return j;
             var onNextArgument = oldArguments.Arguments.First();
             var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
@@ -154,8 +167,11 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
         {
             var onErrorNameColon = nameColon;
+            var q = SyntaxFactory.Identifier(SyntaxTriviaList.Empty, "ex", SyntaxTriviaList.Empty);
+            q = q.WithoutAnnotations(SyntaxAnnotation.ElasticAnnotation);
             var parameter = SyntaxFactory
-                .Parameter(SyntaxFactory.Identifier("ex"))
+                //.Parameter(SyntaxFactory.Identifier("ex"))
+                .Parameter(q)
                 .WithTrailingTrivia(WhiteSpace);
                 //.WithLeadingTrivia(WhiteSpace);
             var lambdaBodyToken = SyntaxFactory.Token
@@ -164,10 +180,10 @@ namespace AnalyzeMe.Design.Analyzers
                     SyntaxKind.OpenBraceToken,
                     SyntaxFactory.TriviaList(WhiteSpace, SyntaxFactory.Comment(MethodBodyComment), WhiteSpace)
                 );
-            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, default(SyntaxList<StatementSyntax>), SyntaxFactory.Token(SyntaxKind.CloseBraceToken));
+            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, default(SyntaxList<StatementSyntax>), SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CloseBraceToken, SyntaxTriviaList.Empty));
             var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
                 .WithArrowToken(
-                    SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken)
+                    SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.EqualsGreaterThanToken, SyntaxTriviaList.Empty)
                         .WithTrailingTrivia(WhiteSpace));
             var nopToken = SyntaxFactory.Token(SyntaxKind.None);
             var onErrorArgument = SyntaxFactory.Argument(onErrorNameColon, nopToken, lambdaExpression);
