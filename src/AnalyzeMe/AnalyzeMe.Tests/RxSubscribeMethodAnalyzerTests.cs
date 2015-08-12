@@ -87,14 +87,15 @@ namespace Test
     //        ");
 
             var originSource = Source.Replace(@"{0}",
-            @"observable.Subscribe(nextValue => { Console.WriteLine(); }, 
+            @"
+            observable.Subscribe( /* Comment before onNext */
+                            nextValue => {}
+            );
+            observable.Subscribe(nextValue => { Console.WriteLine(); }, 
                 () => { /*Some comment*/ });
             observable.Subscribe(
                             nextValue => { Console.WriteLine(); }, 
                             () => { /*Some comment*/ });
-            observable.Subscribe( /* Comment before onNext */
-                            nextValue => {}
-            );
             observable.Subscribe(onCompleted: () => {}, 
                                  onNext: nextValue => {});
             observable.Subscribe(
