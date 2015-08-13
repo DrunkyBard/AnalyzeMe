@@ -45,7 +45,6 @@ namespace AnalyzeMe.Design.Analyzers
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
             var lal = @"(nextValue => { Console.WriteLine(); },
-
                 ex => { /*TODO: handle this!*/ }, 
                 () => { /*Some comment*/ })";
             var j = SyntaxFactory.ParseArgumentList(lal);

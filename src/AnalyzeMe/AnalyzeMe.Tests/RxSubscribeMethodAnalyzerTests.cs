@@ -1,5 +1,4 @@
-﻿using System;
-using AnalyzeMe.Design.Analyzers;
+﻿using AnalyzeMe.Design.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -61,88 +60,66 @@ namespace Test
         [TestMethod]
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticThrown()
         {
-    //        var originSource = Source.Replace(@"{0}",
-    //        @"observable.Subscribe(nextValue => {}, () => {});
-    //        observable.Subscribe(nextValue => {});
-    //        observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {});
-
-
-    //        observable.Subscribe(nextValue => { Console.WriteLine(); }, 
-    //                        () => { /*Some comment*/ });
-    //        observable.Subscribe(
-    //                        nextValue => { Console.WriteLine(); }, 
-    //                        () => { /*Some comment*/ });
-    //        observable.Subscribe( /* Comment before onNext */
-    //                        nextValue => {}
-    //        );
-    //        observable.Subscribe(onCompleted: () => {}, 
-    //                             onNext: nextValue => {});
-    //        observable.Subscribe(
-    //                            onCompleted: () => {
-    //                               Console.WriteLine();
-    //                            }, 
-    // /* Comment before onNext*/ onNext: nextValue => { 
-    //                                Console.WriteLine(); 
-    //                            });
-    //        ");
-
             var originSource = Source.Replace(@"{0}",
             @"
             observable.Subscribe( /* Comment before onNext */
-                            onNext: nextValue => {}
+                            nextValue => {}
             );
-            observable.Subscribe(onNext: nextValue => { Console.WriteLine(); }, 
-                onCompleted: () => { /*Some comment*/ });
+            observable.Subscribe( /* Comment before onNext */
+                            nextValue => {});
+            observable.Subscribe(nextValue => { Console.WriteLine(); },
+                () => { /*Some comment*/ });
             observable.Subscribe(
-                            onNext: nextValue => { Console.WriteLine(); }, 
-                            onCompleted: () => { /*Some comment*/ });
-            observable.Subscribe(onCompleted: () => {}, 
+                            nextValue => { Console.WriteLine(); },
+                            () => { /*Some comment*/ });
+            observable.Subscribe(onCompleted: () => {},
                                  onNext: nextValue => {});
             observable.Subscribe(
                                 onCompleted: () => {
                                    Console.WriteLine();
-                                }, 
+                                },
     /* Comment before onNext*/  onNext: nextValue => { 
                                     Console.WriteLine(); 
                                 });
             ");
-            
+
             var expectedSource = Source.Replace(@"{0}",
-            @"observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ }, () => {});
-            observable.Subscribe(nextValue => {}, ex => { /*TODO: handle this!*/ });
-            observable.Subscribe(onCompleted: () => {}, onNext: nextValue => {}, onError: ex => { /*TODO: handle this!*/ });
-
-
-            observable.Subscribe(nextValue => { Console.WriteLine(); },
-                            ex => { /*TODO: handle this!*/ },
-                            () => { /*Some comment*/ });
-            observable.Subscribe(
-                            nextValue => { Console.WriteLine(); }, 
-                            ex => { /*TODO: handle this!*/ },
-                            () => { /*Some comment*/ });
+                @"
             observable.Subscribe( /* Comment before onNext */
                             nextValue => {},
                             ex => { /*TODO: handle this!*/ }
             );
-            observable.Subscribe(onCompleted: () => {}, 
+            observable.Subscribe( /* Comment before onNext */
+                            nextValue => {}, ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(nextValue => { Console.WriteLine(); },
+                ex => { /*TODO: handle this!*/ },
+                () => { /*Some comment*/ });
+            observable.Subscribe(
+                            nextValue => { Console.WriteLine(); },
+                            ex => { /*TODO: handle this!*/ },
+                            () => { /*Some comment*/ });
+            observable.Subscribe(onCompleted: () => {},
                                  onNext: nextValue => {},
                                  onError: ex => { /*TODO: handle this!*/ });
             observable.Subscribe(
                                 onCompleted: () => {
                                    Console.WriteLine();
-                                }, 
+                                },
     /* Comment before onNext*/  onNext: nextValue => { 
                                     Console.WriteLine(); 
                                 },
                                 onError: ex => { /*TODO: handle this!*/ });
             ");
-
-            var firstSubscribeMethodInvocationDiagnostic = CreateDiagnostic(31, 13);
-            var secondSubscribeMethodInvocationDiagnostic = CreateDiagnostic(32, 13);
-            var thirdSubscribeMethodInvocationDiagnostic = CreateDiagnostic(33, 13);
-
+            
+            VerifyCSharpDiagnostic(
+                originSource,
+                CreateDiagnostic(32, 13),
+                CreateDiagnostic(35, 13),
+                CreateDiagnostic(37, 13),
+                CreateDiagnostic(39, 13),
+                CreateDiagnostic(42, 13),
+                CreateDiagnostic(44, 13));
             VerifyCSharpFix(originSource, expectedSource);
-            VerifyCSharpDiagnostic(originSource, firstSubscribeMethodInvocationDiagnostic, secondSubscribeMethodInvocationDiagnostic, thirdSubscribeMethodInvocationDiagnostic);
         }
 
         private DiagnosticResult CreateDiagnostic(int line, int column)
