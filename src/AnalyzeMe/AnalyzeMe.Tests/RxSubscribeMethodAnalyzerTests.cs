@@ -89,13 +89,13 @@ namespace Test
             var originSource = Source.Replace(@"{0}",
             @"
             observable.Subscribe( /* Comment before onNext */
-                            nextValue => {}
+                            onNext: nextValue => {}
             );
-            observable.Subscribe(nextValue => { Console.WriteLine(); }, 
-                () => { /*Some comment*/ });
+            observable.Subscribe(onNext: nextValue => { Console.WriteLine(); }, 
+                onCompleted: () => { /*Some comment*/ });
             observable.Subscribe(
-                            nextValue => { Console.WriteLine(); }, 
-                            () => { /*Some comment*/ });
+                            onNext: nextValue => { Console.WriteLine(); }, 
+                            onCompleted: () => { /*Some comment*/ });
             observable.Subscribe(onCompleted: () => {}, 
                                  onNext: nextValue => {});
             observable.Subscribe(

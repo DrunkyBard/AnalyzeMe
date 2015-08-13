@@ -51,7 +51,7 @@ namespace AnalyzeMe.Design.Analyzers
             var j = SyntaxFactory.ParseArgumentList(lal);
 
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
-            updatedRoot = updatedRoot.WithoutAnnotations(Formatter.Annotation);
+            //updatedRoot = updatedRoot.WithoutAnnotations(Formatter.Annotation);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
             var updatedRoot1 = root.ReplaceNode(methodArguments, j);
@@ -77,8 +77,11 @@ namespace AnalyzeMe.Design.Analyzers
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
             var onErrorComma = SyntaxFactory.Token(SyntaxKind.CommaToken)
-                .WithTrailingTrivia(eolTrivia);
-            var newArguments = oldArguments.Arguments.Add(onErrorArgument);
+                .WithTrailingTrivia(lastArgument.GetTrailingTrivia().Add(eolTrivia));
+            var newArguments = oldArguments
+                .Arguments
+                .Take(oldArguments.Arguments.Count - 1)
+                .Union(new[] {lastArgument.WithoutTrailingTrivia(), onErrorArgument});
             var newCommas = oldArguments.Arguments.GetSeparators().ToList();
             newCommas.Add(onErrorComma);
 
