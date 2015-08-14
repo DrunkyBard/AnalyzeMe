@@ -58,7 +58,8 @@ namespace AnalyzeMe.Design.Analyzers
             onErrorArgument = FormatOnErrorArgument(onErrorArgument, lastArgument);
             var lastComma = lastArgument.GetAssociatedComma();
             var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
-            var eolTrivia = hasEol
+
+            var eolTrivia = hasEol || (!lastComma.IsKind(SyntaxKind.CommaToken) && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
             var onErrorCommaTrailingTrivia = lastArgument

@@ -75,6 +75,11 @@ namespace Test
             observable.Subscribe(
                             nextValue => { Console.WriteLine(); },
                             () => { /*Some comment*/ });
+            observable.Subscribe( /* Comment before onNext */
+                            onNext: nextValue => {} /*OnNext argument trailing comment*/
+            );
+            observable.Subscribe( /* Comment before onNext */
+                            onNext: nextValue => {} /*OnNext argument trailing comment*/);
             observable.Subscribe(onCompleted: () => {},
                                  onNext: nextValue => {});
             observable.Subscribe(
@@ -109,6 +114,13 @@ namespace Test
                             nextValue => { Console.WriteLine(); },
                             ex => { /*TODO: handle this!*/ },
                             () => { /*Some comment*/ });
+            observable.Subscribe( /* Comment before onNext */
+                            onNext: nextValue => {}, /*OnNext argument trailing comment*/
+                            onError: ex => { /*TODO: handle this!*/ }
+            );
+            observable.Subscribe( /* Comment before onNext */
+                            onNext: nextValue => {}, /*OnNext argument trailing comment*/
+                            onError: ex => { /*TODO: handle this!*/ });
             observable.Subscribe(onCompleted: () => {},
                                  onNext: nextValue => {},
                                  onError: ex => { /*TODO: handle this!*/ });
@@ -135,9 +147,11 @@ namespace Test
                 CreateDiagnostic(40, 13),
                 CreateDiagnostic(42, 13),
                 CreateDiagnostic(45, 13),
-                CreateDiagnostic(47, 13),
+                CreateDiagnostic(48, 13),
                 CreateDiagnostic(50, 13),
-                CreateDiagnostic(52, 13));
+                CreateDiagnostic(52, 13),
+                CreateDiagnostic(55, 13),
+                CreateDiagnostic(57, 13));
             VerifyCSharpFix(originSource, expectedSource);
         }
 
