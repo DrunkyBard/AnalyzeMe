@@ -66,6 +66,9 @@ namespace Test
                             nextValue => {}
             );
             observable.Subscribe( /* Comment before onNext */
+                            nextValue => {}, () => {}
+            );
+            observable.Subscribe( /* Comment before onNext */
                             nextValue => {});
             observable.Subscribe(nextValue => { Console.WriteLine(); },
                 () => { /*Some comment*/ });
@@ -74,6 +77,11 @@ namespace Test
                             () => { /*Some comment*/ });
             observable.Subscribe(onCompleted: () => {},
                                  onNext: nextValue => {});
+            observable.Subscribe(
+                                    onCompleted: () => {}, onNext: nextValue => {}
+            );
+            observable.Subscribe(
+                                    onCompleted: () => {}, onNext: nextValue => {});
             observable.Subscribe(
                                 onCompleted: () => {
                                    Console.WriteLine();
@@ -90,6 +98,9 @@ namespace Test
                             ex => { /*TODO: handle this!*/ }
             );
             observable.Subscribe( /* Comment before onNext */
+                            nextValue => {}, ex => { /*TODO: handle this!*/ }, () => {}
+            );
+            observable.Subscribe( /* Comment before onNext */
                             nextValue => {}, ex => { /*TODO: handle this!*/ });
             observable.Subscribe(nextValue => { Console.WriteLine(); },
                 ex => { /*TODO: handle this!*/ },
@@ -102,6 +113,11 @@ namespace Test
                                  onNext: nextValue => {},
                                  onError: ex => { /*TODO: handle this!*/ });
             observable.Subscribe(
+                                    onCompleted: () => {}, onNext: nextValue => {}, onError: ex => { /*TODO: handle this!*/ }
+            );
+            observable.Subscribe(
+                                    onCompleted: () => {}, onNext: nextValue => {}, onError: ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(
                                 onCompleted: () => {
                                    Console.WriteLine();
                                 },
@@ -110,15 +126,18 @@ namespace Test
                                 },
                                 onError: ex => { /*TODO: handle this!*/ });
             ");
-            
+
             VerifyCSharpDiagnostic(
                 originSource,
                 CreateDiagnostic(32, 13),
                 CreateDiagnostic(35, 13),
-                CreateDiagnostic(37, 13),
-                CreateDiagnostic(39, 13),
+                CreateDiagnostic(38, 13),
+                CreateDiagnostic(40, 13),
                 CreateDiagnostic(42, 13),
-                CreateDiagnostic(44, 13));
+                CreateDiagnostic(45, 13),
+                CreateDiagnostic(47, 13),
+                CreateDiagnostic(50, 13),
+                CreateDiagnostic(52, 13));
             VerifyCSharpFix(originSource, expectedSource);
         }
 

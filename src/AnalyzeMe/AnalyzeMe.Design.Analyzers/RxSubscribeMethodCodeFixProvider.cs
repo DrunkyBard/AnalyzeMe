@@ -10,8 +10,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
-using Microsoft.CodeAnalysis.MSBuild;
 
 namespace AnalyzeMe.Design.Analyzers
 {
@@ -40,24 +38,12 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
-            
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
                 ? CreateNamedArgumentsFrom(methodArguments)
                 : CreateSimpleArgumentsFrom(methodArguments);
-            var lal = @"(nextValue => { Console.WriteLine(); },
-                ex => { /*TODO: handle this!*/ }, 
-                () => { /*Some comment*/ })";
-            var j = SyntaxFactory.ParseArgumentList(lal);
 
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
-            //updatedRoot = updatedRoot.WithoutAnnotations(Formatter.Annotation);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
-
-            var updatedRoot1 = root.ReplaceNode(methodArguments, j);
-            var updatedDocument1 = context.Document.WithSyntaxRoot(updatedRoot1);
-            var changes = updatedDocument1.GetTextChangesAsync(updatedDocument).Result;
-            
-            
 
             context.RegisterCodeFix(
                 CodeAction.Create("Add onError parameter", c => Task.FromResult(updatedDocument), "AddSubscribeOnErrorParameter"),
@@ -75,8 +61,13 @@ namespace AnalyzeMe.Design.Analyzers
             var eolTrivia = hasEol
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
+            var onErrorCommaTrailingTrivia = lastArgument
+                .GetTrailingTrivia()
+                .Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia))
+                .ToSyntaxTriviaList()
+                .Add(eolTrivia);
             var onErrorComma = SyntaxFactory.Token(SyntaxKind.CommaToken)
-                .WithTrailingTrivia(lastArgument.GetTrailingTrivia().Add(eolTrivia));
+                .WithTrailingTrivia(onErrorCommaTrailingTrivia);
             var newArguments = oldArguments
                 .Arguments
                 .Take(oldArguments.Arguments.Count - 1)
@@ -89,11 +80,6 @@ namespace AnalyzeMe.Design.Analyzers
 
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
-            //var lal = @"(nextValue => { Console.WriteLine(); },
-            //    ex => { /*TODO: handle this!*/ }, 
-            //    () => { /*Some comment*/ })";
-            //var j = SyntaxFactory.ParseArgumentList(lal);
-            //return j;
             var onNextArgument = oldArguments.Arguments.First();
             var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
@@ -115,17 +101,6 @@ namespace AnalyzeMe.Design.Analyzers
                 trailingCommaTokenTrivia = new SyntaxTriviaList().Add(a);
             }
 
-            //TODO: Comma after onNext parameter should derive trailing trivia from onNext parameter
-            //TODO: for example: onNext: _ => {} /* Some trailing trivias*/ -> onNext: _ => {}, /* Some trailing trivias*/
-            //TODO: or observable.Subscribe( /* Comment before onNext */
-            //TODO:                             nextValue => { }  /*Some trailing trivias*/
-            //TODO:    ); 
-            //TODO:    should be:
-            //TODO:    observable.Subscribe( /* Comment before onNext */
-            //TODO:                             nextValue => { },  /*Some trailing trivias*/
-            //TODO:                             ex => {}
-            //TODO:    );
-            
             var onErrorCommaToken = SyntaxFactory
                 .Token(SyntaxKind.CommaToken)
                 .WithTrailingTrivia(trailingCommaTokenTrivia);
@@ -187,20 +162,20 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
         {
             var onErrorNameColon = nameColon;
-            var q = SyntaxFactory.Identifier(SyntaxTriviaList.Empty, "ex", SyntaxTriviaList.Empty);
-            q = q.WithoutAnnotations(SyntaxAnnotation.ElasticAnnotation);
             var parameter = SyntaxFactory
-                //.Parameter(SyntaxFactory.Identifier("ex"))
-                .Parameter(q)
+                .Parameter(SyntaxFactory.Identifier(SyntaxTriviaList.Empty, "ex", SyntaxTriviaList.Empty))
                 .WithTrailingTrivia(WhiteSpace);
-                //.WithLeadingTrivia(WhiteSpace);
             var lambdaBodyToken = SyntaxFactory.Token
                 (
                     SyntaxFactory.TriviaList(),
                     SyntaxKind.OpenBraceToken,
                     SyntaxFactory.TriviaList(WhiteSpace, SyntaxFactory.Comment(MethodBodyComment), WhiteSpace)
                 );
-            var lambdaBody = SyntaxFactory.Block(lambdaBodyToken, default(SyntaxList<StatementSyntax>), SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CloseBraceToken, SyntaxTriviaList.Empty));
+            var lambdaBody = SyntaxFactory.Block(
+                lambdaBodyToken, 
+                default(SyntaxList<StatementSyntax>), 
+                SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CloseBraceToken, SyntaxTriviaList.Empty)); // Specified SyntaxTriviaList.Empty, because overload with SyntaxKind parameter insert
+                                                                                                                  // elastic trivia and then syntax formatting will replace elastic markers with appropriate trivia.
             var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
                 .WithArrowToken(
                     SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.EqualsGreaterThanToken, SyntaxTriviaList.Empty)
