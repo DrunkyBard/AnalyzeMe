@@ -38,10 +38,10 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
-            var newInvocationArguments = methodArguments.Arguments.First().NameColon != null
-                ? CreateNamedArgumentsFrom(methodArguments)
-                : CreateSimpleArgumentsFrom(methodArguments);
-
+            var newInvocationArguments = methodArguments.Arguments.First().NameColon != null  // TODO: Handle this: Some(x => 
+                ? CreateNamedArgumentsFrom(methodArguments)                                   // TODO:                      {
+                : CreateSimpleArgumentsFrom(methodArguments);                                 // TODO:                      }
+                                                                                              // TODO:              );
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
