@@ -10,7 +10,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
         public override SyntaxTrivia VisitArgument(ArgumentSyntax node)
         {
             var indentCount = node.HasLeadingTrivia
-                ? node.GetLeadingTrivia().Span.Length
+                ? node.GetLeadingTrivia().Reverse().TakeWhile(x => !x.IsKind(SyntaxKind.EndOfLineTrivia)).ToSyntaxTriviaList().Span.Length
                 : node.GetAssociatedComma().TrailingTrivia.Span.Length;
 
             return BuildWhitespace(indentCount);
