@@ -40,7 +40,7 @@ namespace AnalyzeMe.Design.Analyzers
             var methodArguments = subscribeMethodInvocation.ArgumentList;
             var newInvocationArguments = methodArguments.Arguments.First().NameColon != null  // TODO: Handle this: Some(x => 
                 ? CreateNamedArgumentsFrom(methodArguments)                                   // TODO:                      {
-                : CreateSimpleArgumentsFrom(methodArguments);                                 // TODO:                      }
+                : CreateSimpleArgumentsFrom(methodArguments);                                 // TODO:                      }, ex => {}
                                                                                               // TODO:              );
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
@@ -72,7 +72,7 @@ namespace AnalyzeMe.Design.Analyzers
             var newArguments = oldArguments
                 .Arguments
                 .Take(oldArguments.Arguments.Count - 1)
-                .Union(new[] {lastArgument.WithoutTrailingTrivia(), onErrorArgument});
+                .Union(new[] { lastArgument.WithoutTrailingTrivia(), onErrorArgument });
             var newCommas = oldArguments.Arguments.GetSeparators().ToList();
             newCommas.Add(onErrorComma);
 
@@ -85,37 +85,53 @@ namespace AnalyzeMe.Design.Analyzers
             var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
             var onErrorArgument = FormatOnErrorArgument(CreateOnErrorLambdaArgument(), onNextArgument, firstAfterOnNextArg);
+            //var onErrorArgument = CreateOnErrorLambdaArgument();
             var afterOnNextCommaToken = SyntaxFactory.Token(SyntaxKind.None);
-            SyntaxTriviaList trailingCommaTokenTrivia;
-
+            SyntaxTriviaList trailingCommaTokenTrivia = SyntaxTriviaList.Empty;
+            
             if (firstAfterOnNextArg == null)
             {
-                trailingCommaTokenTrivia = onNextArgument.GetTrailingTrivia();
-                onNextArgument = onNextArgument.WithoutTrailingTrivia();
+                //trailingCommaTokenTrivia = onNextArgument.GetTrailingTrivia(); // () => {} SomeComment -> () => {}, SomeComment _ => {}
+                var openParenContainsLeadingEol =
+                    ((ArgumentListSyntax)onNextArgument.Parent).OpenParenToken.TrailingTrivia.Any(
+                        x => x.IsKind(SyntaxKind.EndOfLineTrivia));
+                if (openParenContainsLeadingEol)
+                {
+                    onNextArgument =
+                        onNextArgument.WithTrailingTrivia(
+                            onNextArgument.GetTrailingTrivia().Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia)));
+                    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(SyntaxFactory.EndOfLine(Environment.NewLine));
+                }
+                else
+                {
+                    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
+                }
+
+                //onNextArgument = onNextArgument.WithoutTrailingTrivia();
             }
             else
             {
                 afterOnNextCommaToken = firstAfterOnNextArg.GetAssociatedComma();
-                var a =  afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
+                var a = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
                     ? SyntaxFactory.EndOfLine(Environment.NewLine)
-                    : SyntaxFactory.Whitespace(String.Empty);
+                    : WhiteSpace;
                 trailingCommaTokenTrivia = new SyntaxTriviaList().Add(a);
             }
 
-            var onErrorCommaToken = SyntaxFactory
-                .Token(SyntaxKind.CommaToken)
-                .WithTrailingTrivia(trailingCommaTokenTrivia);
+            //trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
+
+            var onErrorCommaToken = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, trailingCommaTokenTrivia);
             var otherArgumentCommaTokens = oldArguments
                 .ChildTokens()
                 .Where(t => t.IsKind(SyntaxKind.CommaToken))
                 .Skip(1);
             var tList = new List<SyntaxToken>();
-            tList.Add(onErrorCommaToken);
 
             if (!afterOnNextCommaToken.IsKind(SyntaxKind.None))
             {
                 tList.Add(afterOnNextCommaToken);
             }
+            tList.Add(onErrorCommaToken);
 
             tList.AddRange(otherArgumentCommaTokens);
 
@@ -140,7 +156,7 @@ namespace AnalyzeMe.Design.Analyzers
                 }
                 else
                 {
-                    whitespace = WhiteSpace;
+                    whitespace = SyntaxFactory.Whitespace(String.Empty);
                 }
 
                 return onErrorArgument.WithLeadingTrivia(whitespace);
@@ -157,7 +173,8 @@ namespace AnalyzeMe.Design.Analyzers
                 return onErrorArgument.WithLeadingTrivia(whitespace).WithTrailingTrivia(trailingEol);
             }
 
-            return onErrorArgument.WithLeadingTrivia(WhiteSpace).WithTrailingTrivia(trailingEol);
+            return onErrorArgument.WithTrailingTrivia(trailingEol);
+            //return onErrorArgument.WithLeadingTrivia(WhiteSpace).WithTrailingTrivia(trailingEol);
         }
 
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)
@@ -173,8 +190,8 @@ namespace AnalyzeMe.Design.Analyzers
                     SyntaxFactory.TriviaList(WhiteSpace, SyntaxFactory.Comment(MethodBodyComment), WhiteSpace)
                 );
             var lambdaBody = SyntaxFactory.Block(
-                lambdaBodyToken, 
-                default(SyntaxList<StatementSyntax>), 
+                lambdaBodyToken,
+                default(SyntaxList<StatementSyntax>),
                 SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CloseBraceToken, SyntaxTriviaList.Empty)); // Specified SyntaxTriviaList.Empty, because overload with SyntaxKind parameter insert
                                                                                                                   // elastic trivia and then syntax formatting will replace elastic markers with appropriate trivia.
             var lambdaExpression = SyntaxFactory.SimpleLambdaExpression(parameter, lambdaBody)
@@ -183,7 +200,7 @@ namespace AnalyzeMe.Design.Analyzers
                         .WithTrailingTrivia(WhiteSpace));
             var nopToken = SyntaxFactory.Token(SyntaxKind.None);
             var onErrorArgument = SyntaxFactory.Argument(onErrorNameColon, nopToken, lambdaExpression);
-            
+
             return onErrorArgument;
         }
     }
