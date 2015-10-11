@@ -38,10 +38,10 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
-            var newInvocationArguments = methodArguments.Arguments.First().NameColon != null  // TODO: Handle this: Some(x => 
-                ? CreateNamedArgumentsFrom(methodArguments)                                   // TODO:                      {
-                : CreateSimpleArgumentsFrom(methodArguments);                                 // TODO:                      }, ex => {}
-                                                                                              // TODO:              );
+            var newInvocationArguments = methodArguments.Arguments.Any(arg => arg.NameColon != null)  // TODO: Handle this: Some(x => 
+                ? CreateNamedArgumentsFrom(methodArguments)                                           // TODO:                      {
+                : CreateSimpleArgumentsFrom(methodArguments);                                         // TODO:                      }, ex => {}
+                                                                                                      // TODO:              );
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
@@ -59,20 +59,20 @@ namespace AnalyzeMe.Design.Analyzers
             var lastComma = lastArgument.GetAssociatedComma();
             var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
 
-            var eolTrivia = hasEol || (!lastComma.IsKind(SyntaxKind.CommaToken) && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
+            //var eolTrivia = hasEol || (!lastComma.IsKind(SyntaxKind.CommaToken) && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
+            var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
-            var onErrorCommaTrailingTrivia = lastArgument
-                .GetTrailingTrivia()
-                .Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia))
-                .ToSyntaxTriviaList()
-                .Add(eolTrivia);
-            var onErrorComma = SyntaxFactory.Token(SyntaxKind.CommaToken)
-                .WithTrailingTrivia(onErrorCommaTrailingTrivia);
+            //var onErrorCommaTrailingTrivia = lastArgument
+            //    .GetTrailingTrivia()
+            //    .Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia))
+            //    .ToSyntaxTriviaList()
+            //    .Add(eolTrivia);
+            var onErrorComma = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, SyntaxTriviaList.Create(eolTrivia));
             var newArguments = oldArguments
                 .Arguments
                 .Take(oldArguments.Arguments.Count - 1)
-                .Union(new[] { lastArgument.WithoutTrailingTrivia(), onErrorArgument });
+                .Union(new[] { lastArgument, onErrorArgument });
             var newCommas = oldArguments.Arguments.GetSeparators().ToList();
             newCommas.Add(onErrorComma);
 
