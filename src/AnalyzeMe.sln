@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.WorkProcess.Host"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.WorkProcess.Tools", "AnalyzeMe\AnalyzeMe.WorkProcess.Tools\AnalyzeMe.WorkProcess.Tools.csproj", "{D329BE0A-8BF6-48C2-9B42-3868D12A3385}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzeMe.Vsix", "AnalyzeMe\AnalyzeMe.Vsix\AnalyzeMe.Vsix.csproj", "{61314230-A640-4D08-BBAB-8542E939E546}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{D329BE0A-8BF6-48C2-9B42-3868D12A3385}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D329BE0A-8BF6-48C2-9B42-3868D12A3385}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D329BE0A-8BF6-48C2-9B42-3868D12A3385}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61314230-A640-4D08-BBAB-8542E939E546}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61314230-A640-4D08-BBAB-8542E939E546}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61314230-A640-4D08-BBAB-8542E939E546}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61314230-A640-4D08-BBAB-8542E939E546}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
