@@ -7,7 +7,11 @@ namespace AnalyzeMe.Design.Analyzers.Utils
         public static Optional<TOutput> As<TOutput>(this object source) 
             where TOutput : class
         {
-            return new Optional<TOutput>(source as TOutput);
+            var destination = source as TOutput;
+
+            return destination == null
+                ? new Optional<TOutput>()
+                : new Optional<TOutput>(destination);
         }
     }
 }

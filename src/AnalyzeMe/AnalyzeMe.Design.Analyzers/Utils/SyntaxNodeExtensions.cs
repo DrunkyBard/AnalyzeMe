@@ -26,9 +26,51 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentNullException(nameof(node));
             }
 
-            var whitespaceExtractor = new WhitespaceExtractor();
+            var whitespaceExtractor = new LeadWhitespaceExtractor();
 
             return whitespaceExtractor.Visit(node);
+        }
+
+        public static FileLinePositionSpan GetLinePosition(this SyntaxNode node)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            var ast = node.SyntaxTree;
+
+            return ast.GetLineSpan(node.Span);
+        }
+
+        public static SyntaxTriviaList GetLeadingTriviaOnCurrentLine(this SyntaxNode node)
+        {
+            var currentLinePosition = node.GetStartLinePosition();
+
+            return node
+                .GetLeadingTrivia()
+                .Where(x => x.GetEndLinePosition() == currentLinePosition)
+                .ToSyntaxTriviaList();
+        }
+
+        public static int GetStartLinePosition(this SyntaxNode node)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            return node.GetLinePosition().StartLinePosition.Line;
+        }
+
+        public static int GetEndLinePosition(this SyntaxNode node)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            return node.GetLinePosition().EndLinePosition.Line;
         }
 
         public static SyntaxToken GetAssociatedComma(this ArgumentSyntax argument)

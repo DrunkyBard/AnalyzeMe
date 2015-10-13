@@ -53,7 +53,9 @@
     <Compile Include="Utils\ObjectExtensions.cs" />
     <Compile Include="Utils\SymbolExtensions.cs" />
     <Compile Include="Utils\SyntaxNodeExtensions.cs" />
-    <Compile Include="Utils\WhitespaceExtractor.cs" />
+    <Compile Include="Utils\SyntaxTokenExtensions.cs" />
+    <Compile Include="Utils\LeadWhitespaceExtractor.cs" />
+    <Compile Include="Utils\SyntaxTriviaExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
