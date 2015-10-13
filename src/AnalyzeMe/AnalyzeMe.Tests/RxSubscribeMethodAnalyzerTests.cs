@@ -62,11 +62,6 @@ namespace Test
         {
             var originSource = Source.Replace(@"{0}",
             @"
-            observable.Subscribe(_ =>
-            {
-
-            });
-
             observable.Subscribe(
                 _ =>
                 {

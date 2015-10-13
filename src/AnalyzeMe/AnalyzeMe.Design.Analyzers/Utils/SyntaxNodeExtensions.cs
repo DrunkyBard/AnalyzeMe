@@ -73,6 +73,11 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return node.GetLinePosition().EndLinePosition.Line;
         }
 
+        public static TNode WithoutEolTrivia<TNode>(this TNode node) where TNode : SyntaxNode
+        {
+            return node.WithTrailingTrivia(node.GetTrailingTrivia().Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia)));
+        }
+
         public static SyntaxToken GetAssociatedComma(this ArgumentSyntax argument)
         {
             if (argument == null)

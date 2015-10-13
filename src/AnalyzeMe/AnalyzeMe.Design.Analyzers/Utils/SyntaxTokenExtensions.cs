@@ -29,7 +29,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             return token
                 .LeadingTrivia
-                .Where(x => x.GetEndLinePosition() == currentLinePosition)
+                .Where(x => x.GetStartLinePosition() == x.GetEndLinePosition() && x.GetEndLinePosition() == currentLinePosition)
                 .ToSyntaxTriviaList();
         }
     }

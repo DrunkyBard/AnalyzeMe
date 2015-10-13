@@ -72,7 +72,7 @@ namespace AnalyzeMe.Design.Analyzers
             var newArguments = oldArguments
                 .Arguments
                 .Take(oldArguments.Arguments.Count - 1)
-                .Union(new[] { lastArgument, onErrorArgument });
+                .Union(new[] { lastArgument.WithoutEolTrivia(), onErrorArgument });
             var newCommas = oldArguments.Arguments.GetSeparators().ToList();
             newCommas.Add(onErrorComma);
 
