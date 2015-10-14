@@ -59,7 +59,7 @@ namespace AnalyzeMe.Design.Analyzers
             var lastComma = lastArgument.GetAssociatedComma();
             var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
 
-            var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
+            var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && oldArguments.OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
             var onErrorComma = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, SyntaxTriviaList.Create(eolTrivia));
@@ -128,10 +128,7 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var onErrorCommaToken = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, trailingCommaTokenTrivia);
-            var otherArgumentCommaTokens = oldArguments
-                .ChildTokens()
-                .Where(t => t.IsKind(SyntaxKind.CommaToken))
-                .Skip(1);
+            var otherArgumentCommaTokens = oldArguments.Arguments.GetSeparators().Skip(1);
             var tList = new List<SyntaxToken>();
 
             if (!afterOnNextCommaToken.IsKind(SyntaxKind.None))

@@ -8,15 +8,6 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
     internal sealed class LeadWhitespaceExtractor : CSharpSyntaxVisitor<SyntaxTrivia>
     {
-        public override SyntaxTrivia VisitArgument(ArgumentSyntax node)
-        {
-            var indentCount = node.HasLeadingTrivia
-                ? node.GetLeadingTriviaOnCurrentLine().Span.Length
-                : node.GetAssociatedComma().TrailingTrivia.Span.Length;
-            
-            return BuildWhitespace(indentCount);
-        }
-
         public override SyntaxTrivia VisitIdentifierName(IdentifierNameSyntax node)
         {
             var argumentListOption = node.Parent.Parent.As<ArgumentListSyntax>();
@@ -45,46 +36,18 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
         public override SyntaxTrivia VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
         {
-            var argumentListOption = node.Parent.Parent.As<ArgumentListSyntax>();
-            var argumentSyntax = node.Parent.As<ArgumentSyntax>();
-
-            if (!argumentListOption.HasValue || !argumentSyntax.HasValue)
-            {
-                throw new ArgumentException("Lambda expression should be part of method arguments.");
-            }
-
-            var argumentList = argumentListOption.Value;
-            var lambdaIsFirstArgument = argumentList.Arguments.First().Span == node.Span;
-            var labmdaInOneLine = node.GetStartLinePosition() == node.GetEndLinePosition();
-
-            if (lambdaIsFirstArgument)
-            {
-                var lArgAndOpenParenInOneLine = node.GetStartLinePosition() == argumentList.OpenParenToken.GetStartLinePosition();
-
-                if (labmdaInOneLine && lArgAndOpenParenInOneLine)
-                {
-                    return BuildWhitespace(1);
-                }
-
-                if (lArgAndOpenParenInOneLine)
-                {
-                    var lamdaBodyOption = node.Body.As<BlockSyntax>();
-
-                    return lamdaBodyOption.HasValue
-                        ? BuildWhitespace(lamdaBodyOption.Value.CloseBraceToken.GetLeadingTriviaOnCurrentLine().Span.Length)
-                        : BuildWhitespace(node.Body.GetLeadingTriviaOnCurrentLine().Span.Length);
-                }
-
-                return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);
-            }
-
-            return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);
+            return VisitLambdaExpression(node);
         }
 
         public override SyntaxTrivia VisitSimpleLambdaExpression(SimpleLambdaExpressionSyntax node)
         {
-            var argumentListOption = node.Parent.Parent.As<ArgumentListSyntax>();
-            var argumentSyntax = node.Parent.As<ArgumentSyntax>();
+            return VisitLambdaExpression(node);
+        }
+
+        private SyntaxTrivia VisitLambdaExpression<TLambda>(TLambda lambda) where TLambda : LambdaExpressionSyntax
+        {
+            var argumentListOption = lambda.Parent.Parent.As<ArgumentListSyntax>();
+            var argumentSyntax = lambda.Parent.As<ArgumentSyntax>();
 
             if (!argumentListOption.HasValue || !argumentSyntax.HasValue)
             {
@@ -92,12 +55,12 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             }
 
             var argumentList = argumentListOption.Value;
-            var lambdaIsFirstArgument = argumentList.Arguments.First().Expression.Span == node.Span;
-            var labmdaInOneLine = node.GetStartLinePosition() == node.GetEndLinePosition();
+            var lambdaIsFirstArgument = argumentList.Arguments.First().Expression.Span == lambda.Span;
+            var labmdaInOneLine = lambda.GetStartLinePosition() == lambda.GetEndLinePosition();
 
             if (lambdaIsFirstArgument)
             {
-                var lArgAndOpenParenInOneLine = node.GetStartLinePosition() == argumentList.OpenParenToken.GetStartLinePosition();
+                var lArgAndOpenParenInOneLine = lambda.GetStartLinePosition() == argumentList.OpenParenToken.GetStartLinePosition();
 
                 if (labmdaInOneLine && lArgAndOpenParenInOneLine)
                 {
@@ -106,13 +69,11 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
                 if (lArgAndOpenParenInOneLine)
                 {
-                    var lamdaBodyOption = node.Body.As<BlockSyntax>();
-
-                    var lPos = lamdaBodyOption.Value.CloseBraceToken.GetLinePosition();
+                    var lamdaBodyOption = lambda.Body.As<BlockSyntax>();
 
                     return lamdaBodyOption.HasValue
                         ? BuildWhitespace(lamdaBodyOption.Value.CloseBraceToken.GetLeadingTriviaOnCurrentLine().Span.Length)
-                        : BuildWhitespace(node.Body.GetLeadingTriviaOnCurrentLine().Span.Length);
+                        : BuildWhitespace(lambda.Body.GetLeadingTriviaOnCurrentLine().Span.Length);
                 }
 
                 return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);

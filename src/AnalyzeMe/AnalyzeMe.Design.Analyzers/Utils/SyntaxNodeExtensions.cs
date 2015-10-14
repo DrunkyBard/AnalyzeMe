@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AnalyzeMe.Design.Analyzers.Utils
 {
-    public static class SyntaxNodeExtensions
+    public static partial class SyntaxNodeExtensions
     {
         public static bool TryGetWorkspace(this SyntaxNode node, out Workspace workspace)
         {
