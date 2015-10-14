@@ -19,7 +19,28 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
         public override SyntaxTrivia VisitIdentifierName(IdentifierNameSyntax node)
         {
-            return base.VisitIdentifierName(node);
+            var argumentListOption = node.Parent.Parent.As<ArgumentListSyntax>();
+            var argumentSyntax = node.Parent.As<ArgumentSyntax>();
+
+            if (!argumentListOption.HasValue || !argumentSyntax.HasValue)
+            {
+                throw new ArgumentException("Identifier should be part of method arguments.");
+            }
+
+            var argumentList = argumentListOption.Value;
+            var identifierIsFirstArgument = argumentList.Arguments.First().Span == node.Span;
+
+            if (identifierIsFirstArgument)
+            {
+                var identifierAndOpenParenInOneLine = argumentList.OpenParenToken.GetStartLinePosition() == node.GetStartLinePosition();
+
+                if (identifierAndOpenParenInOneLine)
+                {
+                    return BuildWhitespace(1);
+                }
+            }
+
+            return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);
         }
 
         public override SyntaxTrivia VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
@@ -48,8 +69,6 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 if (lArgAndOpenParenInOneLine)
                 {
                     var lamdaBodyOption = node.Body.As<BlockSyntax>();
-
-                    var lPos = lamdaBodyOption.Value.CloseBraceToken.GetLinePosition();
 
                     return lamdaBodyOption.HasValue
                         ? BuildWhitespace(lamdaBodyOption.Value.CloseBraceToken.GetLeadingTriviaOnCurrentLine().Span.Length)

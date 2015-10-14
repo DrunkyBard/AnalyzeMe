@@ -38,10 +38,10 @@ namespace AnalyzeMe.Design.Analyzers
             }
 
             var methodArguments = subscribeMethodInvocation.ArgumentList;
-            var newInvocationArguments = methodArguments.Arguments.Any(arg => arg.NameColon != null)  // TODO: Handle this: Some(x => 
-                ? CreateNamedArgumentsFrom(methodArguments)                                           // TODO:                      {
-                : CreateSimpleArgumentsFrom(methodArguments);                                         // TODO:                      }, ex => {}
-                                                                                                      // TODO:              );
+            var newInvocationArguments = methodArguments.Arguments.Any(arg => arg.NameColon != null)
+                ? CreateNamedArgumentsFrom(methodArguments)
+                : CreateSimpleArgumentsFrom(methodArguments);
+
             var updatedRoot = root.ReplaceNode(methodArguments, newInvocationArguments);
             var updatedDocument = context.Document.WithSyntaxRoot(updatedRoot);
 
@@ -59,15 +59,9 @@ namespace AnalyzeMe.Design.Analyzers
             var lastComma = lastArgument.GetAssociatedComma();
             var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
 
-            //var eolTrivia = hasEol || (!lastComma.IsKind(SyntaxKind.CommaToken) && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
             var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && ((ArgumentListSyntax)lastArgument.Parent).OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
                 ? SyntaxFactory.EndOfLine(Environment.NewLine)
                 : SyntaxFactory.Whitespace(String.Empty);
-            //var onErrorCommaTrailingTrivia = lastArgument
-            //    .GetTrailingTrivia()
-            //    .Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia))
-            //    .ToSyntaxTriviaList()
-            //    .Add(eolTrivia);
             var onErrorComma = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, SyntaxTriviaList.Create(eolTrivia));
             var newArguments = oldArguments
                 .Arguments
@@ -82,23 +76,14 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             var onNextArgument = oldArguments.Arguments.First();
-            var arg = (SimpleLambdaExpressionSyntax)onNextArgument.Expression;
-            var oneLineArgument = arg.GetStartLinePosition() == arg.GetEndLinePosition();
-            
-
             var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
             var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
             var onErrorArgument = FormatOnErrorArgument(CreateOnErrorLambdaArgument(), onNextArgument, firstAfterOnNextArg);
-            //var onErrorArgument = CreateOnErrorLambdaArgument();
             var afterOnNextCommaToken = SyntaxFactory.Token(SyntaxKind.None);
             SyntaxTriviaList trailingCommaTokenTrivia = SyntaxTriviaList.Empty;
-            
+
             if (firstAfterOnNextArg == null)
             {
-                //trailingCommaTokenTrivia = onNextArgument.GetTrailingTrivia(); // () => {} SomeComment -> () => {}, SomeComment _ => {}
-                var openParenContainsLeadingEol =
-                    ((ArgumentListSyntax)onNextArgument.Parent).OpenParenToken.TrailingTrivia.Any(
-                        x => x.IsKind(SyntaxKind.EndOfLineTrivia));
                 var openParenAndOnNextArgInOneLine = onNextArgument
                     .Parent
                     .As<ArgumentListSyntax>()
@@ -107,30 +92,40 @@ namespace AnalyzeMe.Design.Analyzers
                     .GetStartLinePosition() == onNextArgument.GetStartLinePosition();
                 var onNextArgInOneLine = onNextArgument.GetStartLinePosition() == onNextArgument.GetEndLinePosition();
 
-                if (openParenAndOnNextArgInOneLine && onNextArgInOneLine)
-                {
-                    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
-                }
-                else
+                if (!openParenAndOnNextArgInOneLine || !onNextArgInOneLine)
                 {
                     onNextArgument =
                         onNextArgument.WithTrailingTrivia(
                             onNextArgument.GetTrailingTrivia().Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia)));
                     trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(SyntaxFactory.EndOfLine(Environment.NewLine));
                 }
-
-                //onNextArgument = onNextArgument.WithoutTrailingTrivia();
+                //else
+                //{
+                //    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
+                //}
             }
             else
             {
                 afterOnNextCommaToken = firstAfterOnNextArg.GetAssociatedComma();
-                var a = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
-                    ? SyntaxFactory.EndOfLine(Environment.NewLine)
-                    : WhiteSpace;
-                trailingCommaTokenTrivia = new SyntaxTriviaList().Add(a);
-            }
 
-            //trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
+                SyntaxTriviaList a;
+
+                if (afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia))
+                {
+                    a = new SyntaxTriviaList().Add(SyntaxFactory.EndOfLine(Environment.NewLine));
+                }
+                else
+                {
+                    a = afterOnNextCommaToken.TrailingTrivia;
+                    afterOnNextCommaToken = afterOnNextCommaToken.WithTrailingTrivia(WhiteSpace);
+                }
+
+                //var a = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
+                //    ? SyntaxFactory.EndOfLine(Environment.NewLine)
+                //    : WhiteSpace;
+                //trailingCommaTokenTrivia = new SyntaxTriviaList().Add(a);
+                trailingCommaTokenTrivia = a;
+            }
 
             var onErrorCommaToken = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, trailingCommaTokenTrivia);
             var otherArgumentCommaTokens = oldArguments
@@ -166,10 +161,6 @@ namespace AnalyzeMe.Design.Analyzers
                 {
                     whitespace = firstArgumentAfterOnNext.Expression.ExtractWhitespace();
                 }
-                else
-                {
-                    whitespace = SyntaxFactory.Whitespace(String.Empty);
-                }
 
                 return onErrorArgument.WithLeadingTrivia(whitespace);
             }
@@ -181,16 +172,6 @@ namespace AnalyzeMe.Design.Analyzers
             whitespace = onNextArgument.Expression.ExtractWhitespace();
 
             return onErrorArgument.WithLeadingTrivia(whitespace).WithTrailingTrivia(trailingEol);
-
-            if (onNextArgument.HasLeadingTrivia)
-            {
-                whitespace = onNextArgument.Expression.ExtractWhitespace();
-
-                return onErrorArgument.WithLeadingTrivia(whitespace).WithTrailingTrivia(trailingEol);
-            }
-
-            return onErrorArgument.WithTrailingTrivia(trailingEol);
-            //return onErrorArgument.WithLeadingTrivia(WhiteSpace).WithTrailingTrivia(trailingEol);
         }
 
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)

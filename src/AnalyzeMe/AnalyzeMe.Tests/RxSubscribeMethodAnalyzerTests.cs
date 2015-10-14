@@ -38,6 +38,10 @@ namespace Test
 {
     public class Foo
     {
+        public void OnNextHandler(object val){}
+
+        public void OnCompletedHandler(){}
+
         public void Bar()
         {
             IObservable<object> observable = null;
@@ -62,6 +66,33 @@ namespace Test
         {
             var originSource = Source.Replace(@"{0}",
             @"
+            observable.Subscribe(OnNextHandler /*Comment*/);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/
+                );
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/);
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/
+                );
+            observable.Subscribe(OnNextHandler /*Comment*/, /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/, /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/, 
+                /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                /*Comment*/OnCompletedHandler
+                );
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/, onCompleted: /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/,
+                onCompleted: /*Comment*/OnCompletedHandler
+                );
             observable.Subscribe(
                 _ =>
                 {
@@ -91,7 +122,7 @@ namespace Test
                             nextValue => { } /*Trailing onNext comment*/, () => { }
             );
             observable.Subscribe(
-                            nextValue => { },/*Trailing onCompleted comma comment*/ () => { }
+                            nextValue => { }, /*Trailing onCompleted comma comment*/ () => { }
             );
             observable.Subscribe( /* Comment before onNext */
                             nextValue => { });
@@ -123,6 +154,40 @@ namespace Test
 
             var expectedSource = Source.Replace(@"{0}",
                 @"
+            observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                ex => { /*TODO: handle this!*/ }
+                );
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/,
+                onError: ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/,
+                onError: ex => { /*TODO: handle this!*/ }
+                );
+            observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ }, /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ }, /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/, 
+                           ex => { /*TODO: handle this!*/ },
+                /*Comment*/OnCompletedHandler);
+            observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                           ex => { /*TODO: handle this!*/ },
+                /*Comment*/OnCompletedHandler
+                );
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/, onCompleted: /*Comment*/OnCompletedHandler, onError: ex => { /*TODO: handle this!*/ });
+            observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/,
+                onCompleted: /*Comment*/OnCompletedHandler,
+                onError: ex => { /*TODO: handle this!*/ }
+                );
             observable.Subscribe(
                 _ =>
                 {
@@ -156,7 +221,7 @@ namespace Test
                             nextValue => { } /*Trailing onNext comment*/, ex => { /*TODO: handle this!*/ }, () => { }
             );
             observable.Subscribe(
-                            nextValue => { },/*Trailing onCompleted comma comment*/ ex => { /*TODO: handle this!*/ }, () => { }
+                            nextValue => { }, ex => { /*TODO: handle this!*/ }, /*Trailing onCompleted comma comment*/ () => { }
             );
             observable.Subscribe( /* Comment before onNext */
                             nextValue => { },
