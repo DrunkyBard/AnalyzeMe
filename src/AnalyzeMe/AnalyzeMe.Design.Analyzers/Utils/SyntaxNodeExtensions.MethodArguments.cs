@@ -15,9 +15,24 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return InsertBetween(insertedArgument, null, beforeArgument);
         }
 
-        public static ArgumentSyntax InsertBetween(this ArgumentSyntax insertedArgument, ArgumentSyntax afterArgument, ArgumentSyntax beforeArgument)
+        private static ArgumentSyntax InsertBetween(ArgumentSyntax insertedArgument, ArgumentSyntax afterArgument, ArgumentSyntax beforeArgument)
         {
-			throw new NotImplementedException();
+            if (insertedArgument == null)
+            {
+                throw new ArgumentNullException(nameof(insertedArgument));
+            }
+
+            if (insertedArgument.NameColon == null && afterArgument?.NameColon != null)
+            {
+                throw new ArgumentException("Argument with name colon cannot be inserted after argument without name colon.");
+            }
+
+            if (insertedArgument.NameColon != null && beforeArgument?.NameColon == null)
+            {
+                throw new ArgumentException("Argument without name colon cannot be inserted before argument with name colon.");
+            }
+
+            throw new NotImplementedException();
         }
     }
 }
