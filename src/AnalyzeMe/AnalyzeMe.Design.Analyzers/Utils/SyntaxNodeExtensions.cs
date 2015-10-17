@@ -85,16 +85,17 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentNullException(nameof(argument));
             }
 
-            var argumentList = argument.Parent as ArgumentListSyntax;
+            var argumentListOption = argument.Parent.As<ArgumentListSyntax>();
 
-            if (argumentList == null || argumentList.Arguments.Count <= 1)
+            if (!argumentListOption.HasValue || argumentListOption.Value.Arguments.Count <= 1)
             {
                 return SyntaxFactory.Token(SyntaxKind.None);
             }
 
+            var argumentList = argumentListOption.Value;
             var commaIndex = argumentList
                 .Arguments
-                .TakeWhile(arg => arg != argument)
+                .TakeWhile(arg => arg.Span != argument.Span)
                 .Count() - 1;   // First argument has no associated comma, so CommaIndex for this argument equal -1
 
             return argumentList.Arguments.GetSeparator(commaIndex);

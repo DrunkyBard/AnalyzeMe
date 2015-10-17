@@ -94,9 +94,7 @@ namespace AnalyzeMe.Design.Analyzers
 
                 if (!openParenAndOnNextArgInOneLine || !onNextArgInOneLine)
                 {
-                    onNextArgument =
-                        onNextArgument.WithTrailingTrivia(
-                            onNextArgument.GetTrailingTrivia().Where(x => !x.IsKind(SyntaxKind.EndOfLineTrivia)));
+                    onNextArgument = onNextArgument.WithoutEolTrivia();
                     trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(SyntaxFactory.EndOfLine(Environment.NewLine));
                 }
                 //else
