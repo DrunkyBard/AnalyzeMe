@@ -3,12 +3,11 @@ using AnalyzeMe.Design.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
+using Xunit;
 
 namespace AnalyzeMe.Tests
 {
-    [TestClass]
     public sealed class SealedClassAnalyzerTests : CodeFixVerifier
     {
         private const string Template = @"
@@ -46,7 +45,7 @@ namespace TestNamespace
     }
 }";
 
-        [TestMethod]
+        [Fact]
         public void ExpectNoDiagnostics()
         {
             var sealedClassDiagnosticCode = ApplyFormat(classModifier: "sealed");
@@ -62,7 +61,7 @@ namespace TestNamespace
             VerifyCSharpDiagnostic(withDerivedTypeDiagnosticCode);
         }
 
-        [TestMethod]
+        [Fact]
         public void ExpectSealedDiagnostic()
         {
             var source = ApplyFormat();

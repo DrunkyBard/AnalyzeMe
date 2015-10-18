@@ -3,12 +3,11 @@ using AnalyzeMe.WorkProcess.Analyzers;
 using AnalyzeMe.WorkProcess.Tools;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestHelper;
+using Xunit;
 
 namespace AnalyzeMe.Tests
 {
-    [TestClass]
     public class TechnicalDebtAnalyzerTests : CodeFixVerifier
     {
         private const string Template = @"
@@ -25,7 +24,7 @@ namespace TestNamespace
     }
 }";
 
-        [TestMethod]
+        [Fact]
         public void ExpectWrongDateDiagnostic()
         {
             var diagnosticCode = ApplyFormat(-1, Month.January, int.MinValue, "Valid reason");
@@ -55,7 +54,7 @@ namespace TestNamespace
             VerifyCSharpDiagnostic(diagnosticCode, expected);
         }
         
-        [TestMethod]
+        [Fact]
         public void ExpectWrongReasonDiagnostic()
         {
             var nextDay = DateTime.Now.AddDays(1);
@@ -70,7 +69,7 @@ namespace TestNamespace
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 6, 70)
+                            new DiagnosticResultLocation("Test0.cs", 6, 73)
                         }
             };
             
@@ -78,7 +77,7 @@ namespace TestNamespace
             VerifyCSharpDiagnostic(emptyReasonDiagnosticCode, expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void ExpectExpiredTechnicalDebtDiagnostic()
         {
             var nextDay = DateTime.Now.AddDays(-1);
@@ -99,7 +98,7 @@ namespace TestNamespace
             VerifyCSharpDiagnostic(diagnosticCode, expected);
         }
 
-        [TestMethod]
+        [Fact]
         public void ExpectExpiredSoonTechnicalDebtDiagnostic()
         {
             var nextDay = DateTime.Now.AddDays(1).Date;
