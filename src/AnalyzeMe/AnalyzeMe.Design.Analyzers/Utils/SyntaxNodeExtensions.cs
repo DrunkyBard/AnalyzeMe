@@ -100,5 +100,59 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             return argumentList.Arguments.GetSeparator(commaIndex);
         }
+
+        public static TNode WithoutLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithLeadingTrivia(
+                    node.GetLeadingTrivia()
+                        .Where(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static TNode WithoutLastLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithLeadingTrivia(
+                    node.GetLeadingTrivia()
+                        .TakeWhile(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static TNode WithoutFirstLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithLeadingTrivia(
+                    node.GetLeadingTrivia()
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static TNode WithoutTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithTrailingTrivia(
+                    node.GetTrailingTrivia()
+                        .Where(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static TNode WithoutLastTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithTrailingTrivia(
+                    node.GetTrailingTrivia()
+                        .TakeWhile(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static TNode WithoutFirstTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithTrailingTrivia(
+                    node.GetTrailingTrivia()
+                        .SkipWhile(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
     }
 }
