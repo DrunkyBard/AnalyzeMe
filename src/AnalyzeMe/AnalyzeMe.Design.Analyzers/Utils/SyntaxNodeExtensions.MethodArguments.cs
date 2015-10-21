@@ -28,7 +28,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
         public static ArgumentSyntax InsertBefore(this ArgumentSyntax insertedArgument, ArgumentSyntax beforeArgument)
         {
-            var argumentListOption = beforeArgument.As<ArgumentListSyntax>();
+            var argumentListOption = beforeArgument.Parent.As<ArgumentListSyntax>();
 
             if (!argumentListOption.HasValue)
             {

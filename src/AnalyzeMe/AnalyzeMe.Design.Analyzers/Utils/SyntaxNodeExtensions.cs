@@ -26,7 +26,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentNullException(nameof(node));
             }
 
-            var whitespaceExtractor = new LeadWhitespaceExtractor();
+            var whitespaceExtractor = new ArgumentLeadWhitespaceExtractor();
 
             return whitespaceExtractor.Visit(node);
         }
@@ -89,6 +89,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             if (!argumentListOption.HasValue || argumentListOption.Value.Arguments.Count <= 1)
             {
+                return SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.None, SyntaxTriviaList.Empty);
                 return SyntaxFactory.Token(SyntaxKind.None);
             }
 
@@ -101,7 +102,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return argumentList.Arguments.GetSeparator(commaIndex);
         }
 
-        public static TNode WithoutLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutLeadingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
                 .WithLeadingTrivia(
@@ -110,7 +111,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
-        public static TNode WithoutLastLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutLastLeadingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
                 .WithLeadingTrivia(
@@ -119,7 +120,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
-        public static TNode WithoutFirstLeadingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutFirstLeadingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
                 .WithLeadingTrivia(
@@ -128,7 +129,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
-        public static TNode WithoutTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutTrailingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
                 .WithTrailingTrivia(
@@ -137,22 +138,44 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
-        public static TNode WithoutLastTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutLastTrailingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
+            // TODO: Check this
             return node
                 .WithTrailingTrivia(
                     node.GetTrailingTrivia()
-                        .TakeWhile(t => !t.IsKind(excludeTriviaKind))
+                        .Reverse()
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
+                        .Reverse()
                 );
         }
 
-        public static TNode WithoutFirstTrailingTrivia<TNode>(TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        public static TNode WithoutFirstTrailingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
                 .WithTrailingTrivia(
                     node.GetTrailingTrivia()
-                        .SkipWhile(t => !t.IsKind(excludeTriviaKind))
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
                 );
+        }
+
+        public static TNode WithoutTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
+        {
+            return node
+                .WithoutLeadingTrivia(excludeTriviaKind)
+                .WithoutTrailingTrivia(excludeTriviaKind);
+        }
+
+        public static TNode ReplaceNode<TNode>(this TNode node, Func<TNode, SyntaxNode> replacementNodeSelector, SyntaxNode newNode) 
+            where TNode : SyntaxNode
+        {
+            return node.ReplaceNode(replacementNodeSelector(node), newNode);
+        }
+
+        public static TNode ReplaceToken<TNode>(this TNode node, Func<TNode, SyntaxToken> replacementTokenSelector, SyntaxToken newToken) 
+            where TNode : SyntaxNode
+        {
+            return node.ReplaceToken(replacementTokenSelector(node), newToken);
         }
     }
 }

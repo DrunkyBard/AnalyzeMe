@@ -32,5 +32,69 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 .Where(x => x.GetStartLinePosition() == x.GetEndLinePosition() && x.GetEndLinePosition() == currentLinePosition)
                 .ToSyntaxTriviaList();
         }
+
+        public static SyntaxToken WithoutLeadingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithLeadingTrivia(
+                    token.LeadingTrivia
+                        .Where(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static SyntaxToken WithoutLastLeadingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithLeadingTrivia(
+                    token.LeadingTrivia
+                        .TakeWhile(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static SyntaxToken WithoutFirstLeadingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithLeadingTrivia(
+                    token.LeadingTrivia
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static SyntaxToken WithoutTrailingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithTrailingTrivia(
+                    token.TrailingTrivia
+                        .Where(t => !t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static SyntaxToken WithoutLastTrailingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            // TODO: Check this
+            return token
+                .WithTrailingTrivia(
+                    token.TrailingTrivia
+                        .Reverse()
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
+                        .Reverse()
+                );
+        }
+
+        public static SyntaxToken WithoutFirstTrailingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithTrailingTrivia(
+                    token.TrailingTrivia
+                        .SkipWhile(t => t.IsKind(excludeTriviaKind))
+                );
+        }
+
+        public static SyntaxToken WithoutTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        {
+            return token
+                .WithoutLeadingTrivia(excludeTriviaKind)
+                .WithoutTrailingTrivia(excludeTriviaKind);
+        }
     }
 }

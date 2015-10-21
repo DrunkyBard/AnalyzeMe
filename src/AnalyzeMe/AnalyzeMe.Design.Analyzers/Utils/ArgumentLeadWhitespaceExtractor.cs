@@ -6,20 +6,26 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AnalyzeMe.Design.Analyzers.Utils
 {
-    internal sealed class LeadWhitespaceExtractor : CSharpSyntaxVisitor<SyntaxTrivia>
+    internal sealed class ArgumentLeadWhitespaceExtractor : CSharpSyntaxVisitor<SyntaxTrivia>
     {
+        public override SyntaxTrivia VisitArgument(ArgumentSyntax node)
+        {
+            return Visit(node.Expression);
+        }
+
         public override SyntaxTrivia VisitIdentifierName(IdentifierNameSyntax node)
         {
             var argumentListOption = node.Parent.Parent.As<ArgumentListSyntax>();
-            var argumentSyntax = node.Parent.As<ArgumentSyntax>();
+            var argumentSyntaxOption = node.Parent.As<ArgumentSyntax>();
 
-            if (!argumentListOption.HasValue || !argumentSyntax.HasValue)
+            if (!argumentListOption.HasValue || !argumentSyntaxOption.HasValue)
             {
                 throw new ArgumentException("Identifier should be part of method arguments.");
             }
 
             var argumentList = argumentListOption.Value;
-            var identifierIsFirstArgument = argumentList.Arguments.First().Span == node.Span;
+            var argumentSyntax = argumentSyntaxOption.Value;
+            var identifierIsFirstArgument = argumentList.Arguments.First().Span == argumentSyntax.Span;
 
             if (identifierIsFirstArgument)
             {
@@ -27,11 +33,23 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
                 if (identifierAndOpenParenInOneLine)
                 {
-                    return BuildWhitespace(1);
+                    var openParenTrailingLength = argumentList.OpenParenToken.TrailingTrivia.Span.Length;
+
+                    return BuildWhitespace(openParenTrailingLength > 0 ? openParenTrailingLength : 1);
                 }
+
+                return BuildWhitespace(argumentSyntax.GetLeadingTriviaOnCurrentLine().Span.Length);
             }
 
-            return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);
+            var argumentComma = argumentSyntax.GetAssociatedComma();
+            var commaAndArgumentOnOneLine = argumentComma.GetStartLinePosition() == argumentSyntax.GetStartLinePosition();
+
+            if (commaAndArgumentOnOneLine)
+            {
+                return BuildWhitespace(argumentComma.TrailingTrivia.Span.Length + argumentSyntax.GetLeadingTrivia().Span.Length);
+            }
+
+            return BuildWhitespace(argumentSyntax.GetLeadingTriviaOnCurrentLine().Span.Length);
         }
 
         public override SyntaxTrivia VisitParenthesizedLambdaExpression(ParenthesizedLambdaExpressionSyntax node)
@@ -60,14 +78,14 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             if (lambdaIsFirstArgument)
             {
-                var lArgAndOpenParenInOneLine = lambda.GetStartLinePosition() == argumentList.OpenParenToken.GetStartLinePosition();
+                var lambdaArgAndOpenParenInOneLine = lambda.GetStartLinePosition() == argumentList.OpenParenToken.GetStartLinePosition();
 
-                if (labmdaInOneLine && lArgAndOpenParenInOneLine)
+                if (labmdaInOneLine && lambdaArgAndOpenParenInOneLine)
                 {
                     return BuildWhitespace(1);
                 }
 
-                if (lArgAndOpenParenInOneLine)
+                if (lambdaArgAndOpenParenInOneLine)
                 {
                     var lamdaBodyOption = lambda.Body.As<BlockSyntax>();
 
@@ -77,6 +95,16 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 }
 
                 return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);
+            }
+
+            var argumentComma = argumentSyntax
+                .Value
+                .GetAssociatedComma();
+            var commaAndArgumentOnOneLine = argumentComma.GetStartLinePosition() == argumentSyntax.Value.GetStartLinePosition();
+
+            if (commaAndArgumentOnOneLine)
+            {
+                return BuildWhitespace(argumentComma.TrailingTrivia.Span.Length);
             }
 
             return BuildWhitespace(argumentSyntax.Value.GetLeadingTriviaOnCurrentLine().Span.Length);

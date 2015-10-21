@@ -64,8 +64,47 @@ namespace Test
 
         public static IEnumerable<object[]> MethodInvocationDoesNotHaveOnErrorParameter()
         {
-            var actual = @"observable.Subscribe(OnNextHandler /*Comment*/);";
-            var expected = @"observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ });";
+            var actual = "";
+            var expected = "";
+
+            actual = @"observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/
+                );";
+            expected = @"observable.Subscribe(
+                onNext: OnNextHandler /*Comment*/,
+                onError: ex => { /*TODO: handle this!*/ }
+                );";
+
+            yield return new object[]
+            {
+                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
+            };
+
+            actual = @"observable.Subscribe(                OnNextHandler /*Comment*/);";
+            expected = @"observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                ex => { /*TODO: handle this!*/ });";
+
+            yield return new object[]
+            {
+                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
+            };
+
+
+            actual = @"observable.Subscribe(
+                OnNextHandler /*Comment*/);";
+            expected = @"observable.Subscribe(
+                OnNextHandler /*Comment*/,
+                ex => { /*TODO: handle this!*/ });";
+
+            yield return new object[]
+            {
+                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
+            };
+
+            /*----------------------------------*/
+            actual = @"observable.Subscribe(OnNextHandler /*Comment*/);";
+            expected = @"observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {

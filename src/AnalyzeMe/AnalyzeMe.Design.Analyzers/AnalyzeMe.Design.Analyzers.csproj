@@ -56,7 +56,7 @@
     <Compile Include="Utils\SymbolExtensions.cs" />
     <Compile Include="Utils\SyntaxNodeExtensions.cs" />
     <Compile Include="Utils\SyntaxTokenExtensions.cs" />
-    <Compile Include="Utils\LeadWhitespaceExtractor.cs" />
+    <Compile Include="Utils\ArgumentLeadWhitespaceExtractor.cs" />
     <Compile Include="Utils\SyntaxTriviaExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
