@@ -66,19 +66,38 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             }
 
             var argumentsBefore = argumentList.Arguments.TakeWhile(x => x.Span != beforeArgument.Span);
-            var argumentsAfter = argumentList.Arguments.SkipWhile(x => x.Span != beforeArgument.Span);
-            var comma = beforeArgument.GetAssociatedComma();
+            var argumentsAfter = argumentList.Arguments.SkipWhile(
+                x => x.Span != beforeArgument.Span);
+            var comma = beforeArgument.GetPreviousComma();
             var argumentSeparators = argumentList.Arguments.GetSeparators().ToArray();
             var separatorsBefore = argumentSeparators.TakeWhile(x => x.Span != comma.Span);
             var separatorsAfter = argumentSeparators.SkipWhile(x => x.Span != comma.Span);
             
             var idx = argumentList.Arguments.IndexOf(beforeArgument);
-            var whitespace = SyntaxTriviaList.Create(SyntaxFactory.Whitespace(" "));
+            //var whitespace = SyntaxTriviaList.Create(SyntaxFactory.Whitespace(" "));
+            SyntaxTriviaList commaTrailingTrivias;
+
+            if (idx == 0)
+            {
+                commaTrailingTrivias = argumentList.OpenParenToken.TrailingTrivia;
+                argumentList = argumentList.ReplaceToken(
+                    argumentList.OpenParenToken,
+                    argumentList.OpenParenToken.WithoutTrailingTrivia());
+            }
+            else
+            {
+                commaTrailingTrivias = beforeArgument.GetPreviousComma().TrailingTrivia;
+            }
+
+            commaTrailingTrivias = commaTrailingTrivias
+                .Union(beforeArgument.GetLeadingTrivia())
+                .ToSyntaxTriviaList();
             var updateArgument = argumentsBefore
                 .Union(new[] {insertedArgument})
                 .Union(argumentsAfter);
             var updateSeparators = separatorsBefore
-                .Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, whitespace)})
+                //.Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, whitespace)})
+                .Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, commaTrailingTrivias) })
                 .Union(separatorsAfter);
             
             return argumentList

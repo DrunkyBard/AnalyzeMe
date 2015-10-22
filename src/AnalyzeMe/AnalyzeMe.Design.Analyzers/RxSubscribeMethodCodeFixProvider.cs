@@ -56,7 +56,7 @@ namespace AnalyzeMe.Design.Analyzers
             var onErrorNameColon = SyntaxFactory.NameColon("onError");
             var onErrorArgument = CreateOnErrorLambdaArgument(onErrorNameColon);
             onErrorArgument = FormatOnErrorArgument(onErrorArgument, lastArgument);
-            var lastComma = lastArgument.GetAssociatedComma();
+            var lastComma = lastArgument.GetPreviousComma();
             var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
 
             var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && oldArguments.OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
@@ -112,7 +112,7 @@ namespace AnalyzeMe.Design.Analyzers
             }
             else
             {
-                afterOnNextCommaToken = firstAfterOnNextArg.GetAssociatedComma();
+                afterOnNextCommaToken = firstAfterOnNextArg.GetPreviousComma();
 
                 SyntaxTriviaList a;
 
@@ -160,7 +160,7 @@ namespace AnalyzeMe.Design.Analyzers
 
             if (firstArgumentAfterOnNext != null)
             {
-                if (firstArgumentAfterOnNext.GetAssociatedComma().TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
+                if (firstArgumentAfterOnNext.GetPreviousComma().TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
                 {
                     whitespace = firstArgumentAfterOnNext.Expression.ExtractWhitespace();
                 }

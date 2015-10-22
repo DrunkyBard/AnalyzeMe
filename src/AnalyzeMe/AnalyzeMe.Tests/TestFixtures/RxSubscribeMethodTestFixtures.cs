@@ -68,12 +68,10 @@ namespace Test
             var expected = "";
 
             actual = @"observable.Subscribe(
-                onNext: OnNextHandler /*Comment*/
-                );";
+                OnNextHandler /*Comment*/);";
             expected = @"observable.Subscribe(
-                onNext: OnNextHandler /*Comment*/,
-                onError: ex => { /*TODO: handle this!*/ }
-                );";
+                OnNextHandler /*Comment*/,
+                ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {

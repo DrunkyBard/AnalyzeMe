@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -60,12 +61,18 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
-        public static SyntaxToken WithoutTrailingTrivia(this SyntaxToken token, SyntaxKind excludeTriviaKind)
+        public static SyntaxToken WithoutTrailingTrivia(this SyntaxToken token)
+        {
+            return token.WithTrailingTrivia();
+        }
+
+
+        public static SyntaxToken WithoutTrailingTrivia(this SyntaxToken token, params SyntaxKind[] excludeTriviaKinds)
         {
             return token
                 .WithTrailingTrivia(
                     token.TrailingTrivia
-                        .Where(t => !t.IsKind(excludeTriviaKind))
+                        .Where(t => !excludeTriviaKinds.Contains(t.Kind()))
                 );
         }
 
@@ -95,6 +102,26 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return token
                 .WithoutLeadingTrivia(excludeTriviaKind)
                 .WithoutTrailingTrivia(excludeTriviaKind);
+        }
+
+        public static SyntaxToken AppendTrailingTrivia(this SyntaxToken token, params SyntaxTrivia[] trailingTrivias)
+        {
+            return token.WithTrailingTrivia(token.TrailingTrivia.Union(trailingTrivias));
+        }
+
+        public static SyntaxToken AddToTheTopTrailingTrivia(this SyntaxToken token, params SyntaxTrivia[] trailingTrivias)
+        {
+            return token.WithTrailingTrivia(trailingTrivias.Union(token.TrailingTrivia));
+        }
+
+        public static SyntaxToken ReplaceTrivia(this SyntaxToken token, Func<SyntaxToken, SyntaxTrivia> replacementTriviaSelector, SyntaxTrivia newTrivia)
+        {
+            if (newTrivia.IsKind(SyntaxKind.None))
+            {
+                return token;
+            }
+
+            return token.ReplaceTrivia(replacementTriviaSelector(token), newTrivia);
         }
     }
 }

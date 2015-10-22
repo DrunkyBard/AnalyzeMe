@@ -35,13 +35,14 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 {
                     var openParenTrailingLength = argumentList.OpenParenToken.TrailingTrivia.Span.Length;
 
-                    return BuildWhitespace(openParenTrailingLength > 0 ? openParenTrailingLength : 1);
+                    //return BuildWhitespace(openParenTrailingLength > 0 ? openParenTrailingLength : 1);
+                    return BuildWhitespace(openParenTrailingLength + argumentSyntax.GetLeadingTrivia().Span.Length);
                 }
 
                 return BuildWhitespace(argumentSyntax.GetLeadingTriviaOnCurrentLine().Span.Length);
             }
 
-            var argumentComma = argumentSyntax.GetAssociatedComma();
+            var argumentComma = argumentSyntax.GetPreviousComma();
             var commaAndArgumentOnOneLine = argumentComma.GetStartLinePosition() == argumentSyntax.GetStartLinePosition();
 
             if (commaAndArgumentOnOneLine)
@@ -82,7 +83,8 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
                 if (labmdaInOneLine && lambdaArgAndOpenParenInOneLine)
                 {
-                    return BuildWhitespace(1);
+                    //return BuildWhitespace(1);
+                    return BuildWhitespace(argumentSyntax.Value.GetLeadingTrivia().Span.Length + argumentList.OpenParenToken.TrailingTrivia.Span.Length);
                 }
 
                 if (lambdaArgAndOpenParenInOneLine)
@@ -99,7 +101,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             var argumentComma = argumentSyntax
                 .Value
-                .GetAssociatedComma();
+                .GetPreviousComma();
             var commaAndArgumentOnOneLine = argumentComma.GetStartLinePosition() == argumentSyntax.Value.GetStartLinePosition();
 
             if (commaAndArgumentOnOneLine)
