@@ -70,7 +70,7 @@ namespace Test
             actual = @"observable.Subscribe(
                 OnNextHandler /*Comment*/);";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
+                OnNextHandler /*Comment*/, 
                 ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -80,7 +80,7 @@ namespace Test
 
             actual = @"observable.Subscribe(                OnNextHandler /*Comment*/);";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
+                OnNextHandler /*Comment*/, 
                 ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -92,7 +92,7 @@ namespace Test
             actual = @"observable.Subscribe(
                 OnNextHandler /*Comment*/);";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
+                OnNextHandler /*Comment*/, 
                 ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -112,7 +112,7 @@ namespace Test
             actual = @"observable.Subscribe(
                 OnNextHandler /*Comment*/);";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
+                OnNextHandler /*Comment*/, 
                 ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -124,7 +124,7 @@ namespace Test
                 OnNextHandler /*Comment*/
                 );";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
+                OnNextHandler /*Comment*/, 
                 ex => { /*TODO: handle this!*/ }
                 );";
 

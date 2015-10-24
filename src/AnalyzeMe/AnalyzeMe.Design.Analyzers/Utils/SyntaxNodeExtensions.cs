@@ -257,5 +257,13 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 ? node 
                 : node.ReplaceToken(replacementTokenSelector(node), newToken);
         }
+
+        public static TNode ReplaceToken<TNode>(this TNode node, Func<TNode, SyntaxToken> replacementTokenSelector, Func<SyntaxToken, SyntaxToken> newTokenFunc)
+            where TNode : SyntaxNode
+        {
+            var replacementToken = replacementTokenSelector(node);
+
+            return node.ReplaceToken(replacementToken, newTokenFunc(replacementToken));
+        }
     }
 }

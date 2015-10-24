@@ -76,7 +76,7 @@ namespace AnalyzeMe.Design.Analyzers
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             return CreateOnErrorLambdaArgument()
-                .InsertBefore(oldArguments.Arguments.First())
+                .InsertAfter(oldArguments.Arguments.First())
                 .Format()
                 .Parent
                 .As<ArgumentListSyntax>()

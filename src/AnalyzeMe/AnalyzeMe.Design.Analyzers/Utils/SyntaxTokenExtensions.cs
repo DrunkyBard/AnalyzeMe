@@ -106,6 +106,17 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
         public static SyntaxToken AppendTrailingTrivia(this SyntaxToken token, params SyntaxTrivia[] trailingTrivias)
         {
+            try
+            {
+                //var q = token.TrailingTrivia.Union(trailingTrivias);
+                //var g = q.ToList();
+                var a = token.WithTrailingTrivia(token.TrailingTrivia.Union(trailingTrivias)); //TODO: NRE this
+            }
+            catch (Exception e)
+            {
+                var a = 1;
+                throw;
+            }
             return token.WithTrailingTrivia(token.TrailingTrivia.Union(trailingTrivias));
         }
 

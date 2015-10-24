@@ -30,16 +30,13 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 return FormatLast(argumentList, argument);
             }
 
-            var previousArg = argumentList.Arguments[argIdx - 1];
-            var nextArg = argumentList.Arguments[argIdx + 1];
-
-            return FormatBetween(previousArg, argument, nextArg);
+            return FormatBetween(argumentList, argIdx - 1, argIdx, argIdx + 1);
         }
 
         private static ArgumentSyntax FormatFirst(ArgumentListSyntax arguments, ArgumentSyntax formattedArgument)
         {
-            var nextComma = arguments.Arguments[0].GetNextComma();
-            var nextArg = arguments.Arguments[0].TryGetNextArgument();
+            var nextComma = formattedArgument.GetNextComma();
+            var nextArg = formattedArgument.TryGetNextArgument();
             var argumentStartsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() != nextArg.Value.GetStartLinePosition();
             var nextCommaLastTrailingTrivia = !nextArg.HasValue
                 ? new SyntaxTrivia()
@@ -61,10 +58,14 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                     arguments.OpenParenToken
                         .WithoutTrailingTrivia(SyntaxKind.EndOfLineTrivia, SyntaxKind.WhitespaceTrivia)
                         .AppendTrailingTrivia(openParenTrailingTrivia))
-                .ReplaceNode(n => n.Arguments[0], arguments.Arguments[0].WithoutLeadingTrivia(SyntaxKind.WhitespaceTrivia))
-                .ReplaceNode(n => n.Arguments[0], arguments.Arguments[0].WithoutTrailingTrivia(SyntaxKind.WhitespaceTrivia, SyntaxKind.EndOfLineTrivia))
-                .ReplaceToken(n => n.Arguments[0].GetNextComma(), formattedComma)                
-                .ReplaceNode(n => n.Arguments[0], n => AlignWith(n, n.TryGetNextArgument()));
+                .ReplaceNode(
+                        n => n.Arguments[0], 
+                        arguments.Arguments[0]
+                            .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
+                            .WithoutTrailingTrivia(SyntaxKind.EndOfLineTrivia))
+                //.ReplaceNode(n => n.Arguments[0], arguments.Arguments[0].WithoutTrailingTrivia(SyntaxKind.WhitespaceTrivia, SyntaxKind.EndOfLineTrivia))
+                .ReplaceNode(n => n.Arguments[0], n => AlignWith(n, n.TryGetNextArgument()))
+                .ReplaceToken(n => n.Arguments[0].GetNextComma(), formattedComma);
 
             return arguments.Arguments[0];
         }
@@ -92,12 +93,56 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
         private static ArgumentSyntax FormatLast(ArgumentListSyntax arguments, ArgumentSyntax formattedArgument)
         {
-            throw new NotImplementedException();
+            var argumentsCount = arguments.Arguments.Count;
+            var previousArgument = arguments.Arguments[argumentsCount - 2];
+            var previousArgumentStartsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() != previousArgument.GetStartLinePosition();
+            var lastCommaTrailingTrivia = previousArgumentStartsWithNewLine
+                ? SyntaxFactory.EndOfLine(Environment.NewLine)
+                : new SyntaxTrivia();
+            var lastOriginComma = formattedArgument.GetPreviousComma();
+            var lastFormattedComma = lastOriginComma
+                .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
+                .WithoutTrailingTrivia(SyntaxKind.EndOfLineTrivia)
+                .AddToTheTopTrailingTrivia(SyntaxFactory.Whitespace(" "))
+                .AppendTrailingTrivia(lastCommaTrailingTrivia);
+
+            arguments = arguments
+                .ReplaceToken(n => formattedArgument.GetPreviousComma(), lastFormattedComma)
+                .ReplaceNode(n => n.Arguments.Last(), arg => AlignWith(arg, previousArgument));
+
+            return arguments.Arguments.Last();
         }
 
-        private static ArgumentSyntax FormatBetween(ArgumentSyntax previousArgument, ArgumentSyntax formattedArgument, ArgumentSyntax nextArgument)
+        private static ArgumentSyntax FormatBetween(ArgumentListSyntax arguments, int previousArgIndex, int formattedArgIndex, int nextArgIndex)
         {
-            throw new NotImplementedException();
+            var previousArgEndsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() == arguments.Arguments[previousArgIndex].GetStartLinePosition();
+            var nextArgEndsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() == arguments.Arguments[nextArgIndex].GetStartLinePosition();
+            var previousArgCommaTrailingTrivia = previousArgEndsWithNewLine
+                ? SyntaxFactory.EndOfLine(Environment.NewLine)
+                : new SyntaxTrivia();
+            var nextArgCommaTrailingTrivia = nextArgEndsWithNewLine
+                ? SyntaxFactory.EndOfLine(Environment.NewLine)
+                : new SyntaxTrivia();
+            var previousArgument = arguments.Arguments[previousArgIndex];
+            var nextArgument = arguments.Arguments[nextArgIndex];
+
+            arguments = arguments
+                .ReplaceNode(n => n.Arguments[previousArgIndex], arg => arg.WithoutTrailingTrivia(SyntaxKind.EndOfLineTrivia))
+                .ReplaceToken(
+                    n => n.Arguments[previousArgIndex].GetNextComma(), 
+                    c => c
+                        .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
+                        .AppendTrailingTrivia(SyntaxFactory.Whitespace(" "), previousArgCommaTrailingTrivia))
+                .ReplaceNode(n => n.Arguments[nextArgIndex], arg => arg.WithoutTrailingTrivia(SyntaxKind.EndOfLineTrivia))
+                .ReplaceToken(
+                    n => n.Arguments[nextArgIndex].GetPreviousComma(), 
+                    c => c
+                        .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
+                        .AppendTrailingTrivia(SyntaxFactory.Whitespace(" "), nextArgCommaTrailingTrivia))
+                 .ReplaceNode(n => n.Arguments[formattedArgIndex], n => AlignWith(n, previousArgument))
+                 .ReplaceNode(n => n.Arguments[formattedArgIndex], n => AlignWith(n, nextArgument));
+
+            return arguments.Arguments[formattedArgIndex];
         }
     }
 }
