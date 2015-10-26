@@ -208,6 +208,18 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 );
         }
 
+        public static TNode WithoutLastTrailingTrivia<TNode>(this TNode node, params SyntaxKind[] excludeTriviaKinds) where TNode : SyntaxNode
+        {
+            // TODO: Check this
+            return node
+                .WithTrailingTrivia(
+                    node.GetTrailingTrivia()
+                        .Reverse()
+                        .SkipWhile(t => excludeTriviaKinds.Contains(t.Kind()))
+                        .Reverse()
+                );
+        }
+
         public static TNode WithoutFirstTrailingTrivia<TNode>(this TNode node, SyntaxKind excludeTriviaKind) where TNode : SyntaxNode
         {
             return node
@@ -248,6 +260,15 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             var replacementNode = replacementNodeSelector(node);
 
             return node.ReplaceNode(replacementNode, newNodeFunc(replacementNode));
+        }
+
+        public static TNode ReplaceNode<TNode, TReplacementNode>(this TNode node, Func<TNode, TReplacementNode> replacementNodeSelector, Func<TNode, TReplacementNode, SyntaxNode> newNodeFunc)
+            where TNode : SyntaxNode
+            where TReplacementNode : SyntaxNode
+        {
+            var replacementNode = replacementNodeSelector(node);
+
+            return node.ReplaceNode(replacementNode, newNodeFunc(node, replacementNode));
         }
 
         public static TNode ReplaceToken<TNode>(this TNode node, Func<TNode, SyntaxToken> replacementTokenSelector, SyntaxToken newToken) 

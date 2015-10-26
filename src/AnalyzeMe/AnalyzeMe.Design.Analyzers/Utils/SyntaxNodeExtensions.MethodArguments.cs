@@ -35,7 +35,12 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentException("Before argument should be part of method arguments");
             }
 
-            return InsertBetween(argumentListOption.Value, insertedArgument, null, beforeArgument);
+            var afterArgument = argumentListOption.Value
+                .Arguments
+                .TakeWhile(arg => arg.Span != beforeArgument.Span)
+                .LastOrDefault();
+
+            return InsertBetween(argumentListOption.Value, insertedArgument, afterArgument, beforeArgument);
         }
 
         private static ArgumentSyntax InsertBetween(ArgumentListSyntax argumentList, ArgumentSyntax insertedArgument, ArgumentSyntax afterArgument, ArgumentSyntax beforeArgument)
@@ -65,44 +70,49 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 return InsertLast(argumentList, insertedArgument, afterArgument);
             }
 
-            var argumentsBefore = argumentList.Arguments.TakeWhile(x => x.Span != beforeArgument.Span);
-            var argumentsAfter = argumentList.Arguments.SkipWhile(
-                x => x.Span != beforeArgument.Span);
+            var argumentsBefore = argumentList.Arguments.TakeWhile(x => x.Span != beforeArgument.Span).ToArray();
+            var argumentsAfter = argumentList.Arguments.SkipWhile(x => x.Span != beforeArgument.Span).ToArray();
             var comma = beforeArgument.GetPreviousComma();
             var argumentSeparators = argumentList.Arguments.GetSeparators().ToArray();
-            var separatorsBefore = argumentSeparators.TakeWhile(x => x.Span != comma.Span);
-            var separatorsAfter = argumentSeparators.SkipWhile(x => x.Span != comma.Span);
-            
-            var idx = argumentList.Arguments.IndexOf(beforeArgument);
-            //var whitespace = SyntaxTriviaList.Create(SyntaxFactory.Whitespace(" "));
-            SyntaxTriviaList commaTrailingTrivias;
+            var separatorsBefore = argumentSeparators.TakeWhile(x => x.Span != comma.Span).ToArray();
+            var separatorsAfter = argumentSeparators.SkipWhile(x => x.Span != comma.Span).ToArray();
+            var beforeArgumentIdx = argumentList.Arguments.IndexOf(beforeArgument);
+            var commaTrailingTrivias = SyntaxTriviaList.Empty;
 
-            if (idx == 0)
+            if (beforeArgumentIdx == 0)
             {
                 commaTrailingTrivias = argumentList.OpenParenToken.TrailingTrivia;
                 argumentList = argumentList.ReplaceToken(
                     argumentList.OpenParenToken,
                     argumentList.OpenParenToken.WithoutTrailingTrivia());
             }
-            else
-            {
-                commaTrailingTrivias = beforeArgument.GetPreviousComma().TrailingTrivia;
-            }
 
-            commaTrailingTrivias = commaTrailingTrivias
-                .Union(beforeArgument.GetLeadingTrivia())
-                .ToSyntaxTriviaList();
+            if (comma.GetStartLinePosition() != beforeArgument.GetStartLinePosition())
+            {
+                commaTrailingTrivias = comma.TrailingTrivia;
+                separatorsAfter[0] = comma.WithoutTrailingTrivia();
+            }
+            //else
+            //{
+            //    commaTrailingTrivias = beforeArgument.GetPreviousComma().TrailingTrivia;
+            //}
+
+            
+
+            //commaTrailingTrivias = commaTrailingTrivias
+            //    .Union(beforeArgument.GetLeadingTrivia())
+            //    .ToSyntaxTriviaList();
             var updateArgument = argumentsBefore
                 .Union(new[] {insertedArgument})
                 .Union(argumentsAfter);
             var updateSeparators = separatorsBefore
                 //.Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, whitespace)})
-                .Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, commaTrailingTrivias) })
+                .Union(new[] {SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, commaTrailingTrivias)})
                 .Union(separatorsAfter);
             
             return argumentList
                 .WithArguments(SyntaxFactory.SeparatedList(updateArgument, updateSeparators))
-                .Arguments[idx];
+                .Arguments[beforeArgumentIdx];
         }
 
         private static ArgumentSyntax InsertLast(ArgumentListSyntax arguments, ArgumentSyntax insertedArgument, ArgumentSyntax lastArgument)

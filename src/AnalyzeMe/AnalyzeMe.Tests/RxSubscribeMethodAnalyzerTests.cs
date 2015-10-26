@@ -1,7 +1,10 @@
-﻿using AnalyzeMe.Design.Analyzers;
+﻿using System;
+using System.Linq;
+using AnalyzeMe.Design.Analyzers;
 using AnalyzeMe.Tests.TestFixtures;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using TestHelper;
 using Xunit;
