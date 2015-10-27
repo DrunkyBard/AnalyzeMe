@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -9,7 +8,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
     public static class NodeFormatter
     {
-        public static ArgumentSyntax Format(this ArgumentSyntax argument)
+        public static ArgumentSyntax Format(this ArgumentSyntax argument, ArgumentListSyntax oldArgumentsSyntax)
         {
             var argumentListOption = argument.Parent.As<ArgumentListSyntax>();
 
@@ -64,39 +63,19 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                         arguments.Arguments[0]
                             .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
                             .WithoutLastTrailingTrivia(SyntaxKind.EndOfLineTrivia))
-                //.ReplaceNode(n => n.Arguments[0], arguments.Arguments[0].WithoutTrailingTrivia(SyntaxKind.WhitespaceTrivia, SyntaxKind.EndOfLineTrivia))
                 .ReplaceNode(n => n.Arguments[0], n => AlignWith(n, n.TryGetNextArgument()))
                 .ReplaceToken(n => n.Arguments[0].GetNextComma(), formattedComma);
 
             return arguments.Arguments[0];
         }
 
-        private static ArgumentSyntax AlignWith(ArgumentSyntax argument, Optional<ArgumentSyntax> alignedArgument)
-        {
-            if (!alignedArgument.HasValue || argument.GetStartLinePosition() == alignedArgument.Value.GetStartLinePosition())
-            {
-                return argument;
-            }
-
-            argument = argument.WithoutLeadingTrivia(SyntaxKind.WhitespaceTrivia);
-            var firstArgumentLeadingTriviaLength = argument.GetLeadingTrivia().Span.Length;
-            var secondArgumentWhitespaceLength = alignedArgument.Value.ExtractWhitespace().Span.Length;
-
-            if (firstArgumentLeadingTriviaLength > secondArgumentWhitespaceLength) // For case when formatted argument contains comment leading trivia, etc.
-            {
-                return argument; 
-            }
-
-            var leadingWhitespace = Concat(Enumerable.Repeat(" ", secondArgumentWhitespaceLength - firstArgumentLeadingTriviaLength));
-
-            return argument.AddLeadingTrivia(SyntaxFactory.Whitespace(leadingWhitespace));
-        }
-
         private static ArgumentSyntax FormatLast(ArgumentListSyntax arguments, ArgumentSyntax formattedArgument)
         {
             var argumentsCount = arguments.Arguments.Count;
             var previousArgument = arguments.Arguments[argumentsCount - 2];
-            var previousArgumentStartsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() != previousArgument.GetStartLinePosition();
+            var previousArgumentStartsWithNewLine = 
+                arguments.OpenParenToken.GetStartLinePosition() != previousArgument.GetEndLinePosition() &&
+                (argumentsCount < 3 || arguments.Arguments[argumentsCount - 3].GetEndLinePosition() != previousArgument.GetEndLinePosition());
             var lastCommaTrailingTrivia = previousArgumentStartsWithNewLine
                 ? SyntaxFactory.CarriageReturnLineFeed
                 : SyntaxFactory.Whitespace(Empty);
@@ -119,24 +98,12 @@ namespace AnalyzeMe.Design.Analyzers.Utils
         private static ArgumentSyntax FormatBetween(ArgumentListSyntax arguments, int previousArgIndex, int formattedArgIndex, int nextArgIndex)
         {
             var startWithNewLine = arguments.Arguments[previousArgIndex].GetStartLinePosition() != arguments.Arguments[nextArgIndex].GetStartLinePosition();
-            var previousArgEndsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() != arguments.Arguments[previousArgIndex].GetStartLinePosition();
-            var nextArgEndsWithNewLine = arguments.OpenParenToken.GetStartLinePosition() != arguments.Arguments[nextArgIndex].GetStartLinePosition();
-            //var previousArgCommaTrailingTrivia = previousArgEndsWithNewLine
-            //    ? SyntaxFactory.CarriageReturnLineFeed
-            //    : SyntaxFactory.Whitespace(Empty);
-            //var nextArgCommaTrailingTrivia = nextArgEndsWithNewLine
-            //    ? SyntaxFactory.CarriageReturnLineFeed
-            //    : SyntaxFactory.Whitespace(Empty);
-
             var previousArgCommaTrailingTrivia = startWithNewLine
                 ? SyntaxFactory.CarriageReturnLineFeed
                 : SyntaxFactory.Whitespace(Empty);
             var nextArgCommaTrailingTrivia = startWithNewLine
                 ? SyntaxFactory.CarriageReturnLineFeed
                 : SyntaxFactory.Whitespace(Empty);
-            var previousArgument = arguments.Arguments[previousArgIndex];
-            var nextArgument = arguments.Arguments[nextArgIndex];
-
             arguments = arguments
                 .ReplaceNode(n => n.Arguments[previousArgIndex], arg => arg.WithoutLastTrailingTrivia(SyntaxKind.EndOfLineTrivia))
                 .ReplaceToken(
@@ -146,18 +113,45 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                         .WithoutLastTrailingTrivia(SyntaxKind.EndOfLineTrivia)
                         .AddToTheTopTrailingTrivia(SyntaxFactory.Space)
                         .AppendTrailingTrivia(previousArgCommaTrailingTrivia))
-                .ReplaceNode(n => n.Arguments[nextArgIndex], arg => arg.WithoutLastTrailingTrivia(SyntaxKind.EndOfLineTrivia))
                 .ReplaceToken(
                     n => n.Arguments[nextArgIndex].GetPreviousComma(), 
                     c => c
-                        .WithoutTrivia(SyntaxKind.WhitespaceTrivia)
+                        .WithoutLeadingTrivia(SyntaxKind.WhitespaceTrivia)
                         .WithoutLastTrailingTrivia(SyntaxKind.EndOfLineTrivia)
+                        .WithoutFirstTrailingTrivia(SyntaxKind.WhitespaceTrivia)
                         .AddToTheTopTrailingTrivia(SyntaxFactory.Space)
                         .AppendTrailingTrivia(nextArgCommaTrailingTrivia))
-                 //.ReplaceNode(n => n.Arguments[formattedArgIndex], n => AlignWith(n, previousArgument))
+                 .ReplaceNode(n => n.Arguments[nextArgIndex], (argList, arg) => AlignWith(arg, argList.Arguments[previousArgIndex]))
                  .ReplaceNode(n => n.Arguments[formattedArgIndex], (argList, arg) => AlignWith(arg, argList.Arguments[nextArgIndex]));
 
             return arguments.Arguments[formattedArgIndex];
+        }
+
+        private static ArgumentSyntax AlignWith(ArgumentSyntax argument, Optional<ArgumentSyntax> alignedArgument)
+        {
+            if (!alignedArgument.HasValue || argument.GetStartLinePosition() == alignedArgument.Value.GetStartLinePosition())
+            {
+                return argument;
+            }
+
+            var firstArgumentLeadingTriviaLength = argument.GetLeadingTrivia().Span.Length;
+            var secondArgumentWhitespaceLength = alignedArgument.Value.ExtractWhitespace().Span.Length;
+
+            if (argument.GetLeadingTrivia().Any(t => !t.IsKind(SyntaxKind.WhitespaceTrivia)) && firstArgumentLeadingTriviaLength > secondArgumentWhitespaceLength) // For case when formatted argument contains comment leading trivia, etc.
+            {
+                return argument;
+            }
+
+            if (secondArgumentWhitespaceLength <= firstArgumentLeadingTriviaLength)
+            {
+                return argument;
+            }
+
+            var leadingWhitespace = Concat(Enumerable.Repeat(" ", secondArgumentWhitespaceLength - firstArgumentLeadingTriviaLength));
+
+            return argument
+                .WithoutLeadingTrivia(SyntaxKind.WhitespaceTrivia)
+                .AddLeadingTrivia(SyntaxFactory.Whitespace(leadingWhitespace));
         }
     }
 }

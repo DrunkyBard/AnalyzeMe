@@ -60,14 +60,14 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 throw new ArgumentException("Argument with name colon cannot be inserted after argument without name colon.");
             }
 
-            if (insertedArgument.NameColon != null && beforeArgument?.NameColon == null)
+            if (insertedArgument.NameColon != null && beforeArgument != null && beforeArgument.NameColon == null)
             {
                 throw new ArgumentException("Argument without name colon cannot be inserted before argument with name colon.");
             }
 
             if (beforeArgument == null)
             {
-                return InsertLast(argumentList, insertedArgument, afterArgument);
+                return InsertLast(argumentList, insertedArgument);
             }
 
             var argumentsBefore = argumentList.Arguments.TakeWhile(x => x.Span != beforeArgument.Span).ToArray();
@@ -115,19 +115,12 @@ namespace AnalyzeMe.Design.Analyzers.Utils
                 .Arguments[beforeArgumentIdx];
         }
 
-        private static ArgumentSyntax InsertLast(ArgumentListSyntax arguments, ArgumentSyntax insertedArgument, ArgumentSyntax lastArgument)
+        private static ArgumentSyntax InsertLast(ArgumentListSyntax arguments, ArgumentSyntax insertedArgument)
         {
             return arguments
                 .AddArguments(insertedArgument)
                 .Arguments
                 .Last();
-
-            //var newArguments = argumentList.Arguments.Add();
-            //var insertedComma = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, SyntaxTriviaList.Empty);
-            //var newCommas = argumentList.Arguments.GetSeparators().ToList();
-            //newCommas.Add(insertedComma);
-
-            //oldArguments.WithArguments(SyntaxFactory.SeparatedList(newArguments, newCommas));
         }
     }
 }

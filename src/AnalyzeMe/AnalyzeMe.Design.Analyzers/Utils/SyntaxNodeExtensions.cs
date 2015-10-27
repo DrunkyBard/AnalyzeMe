@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -91,7 +90,6 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             if (!argumentListOption.HasValue || argumentListOption.Value.Arguments.Count <= 1)
             {
                 return SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.None, SyntaxTriviaList.Empty);
-                return SyntaxFactory.Token(SyntaxKind.None);
             }
 
             var argumentList = argumentListOption.Value;

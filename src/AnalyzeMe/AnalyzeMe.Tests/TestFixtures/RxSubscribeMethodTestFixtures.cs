@@ -64,45 +64,8 @@ namespace Test
 
         public static IEnumerable<object[]> MethodInvocationDoesNotHaveOnErrorParameter()
         {
-            var actual = "";
-            var expected = "";
-
-            actual = @"observable.Subscribe(
-                OnNextHandler /*Comment*/);";
-            expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/, 
-                ex => { /*TODO: handle this!*/ });";
-
-            yield return new object[]
-            {
-                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
-            };
-
-            actual = @"observable.Subscribe(                OnNextHandler /*Comment*/);";
-            expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/, 
-                ex => { /*TODO: handle this!*/ });";
-
-            yield return new object[]
-            {
-                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
-            };
-
-
-            actual = @"observable.Subscribe(
-                OnNextHandler /*Comment*/);";
-            expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/, 
-                ex => { /*TODO: handle this!*/ });";
-
-            yield return new object[]
-            {
-                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
-            };
-
-            /*----------------------------------*/
-            actual = @"observable.Subscribe(OnNextHandler /*Comment*/);";
-            expected = @"observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ });";
+            var actual = @"observable.Subscribe(OnNextHandler /*Comment*/);";
+            var expected = @"observable.Subscribe(OnNextHandler /*Comment*/, ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -125,8 +88,7 @@ namespace Test
                 );";
             expected = @"observable.Subscribe(
                 OnNextHandler /*Comment*/, 
-                ex => { /*TODO: handle this!*/ }
-                );";
+                ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -149,8 +111,7 @@ namespace Test
                 );";
             expected = @"observable.Subscribe(
                 onNext: OnNextHandler /*Comment*/,
-                onError: ex => { /*TODO: handle this!*/ }
-                );";
+                onError: ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -180,7 +141,7 @@ namespace Test
                 /*Comment*/OnCompletedHandler);";
             expected = @"observable.Subscribe(
                 OnNextHandler /*Comment*/, 
-                           ex => { /*TODO: handle this!*/ },
+                           ex => { /*TODO: handle this!*/ }, 
                 /*Comment*/OnCompletedHandler);";
 
             yield return new object[]
@@ -193,8 +154,8 @@ namespace Test
                 /*Comment*/OnCompletedHandler
                 );";
             expected = @"observable.Subscribe(
-                OnNextHandler /*Comment*/,
-                           ex => { /*TODO: handle this!*/ },
+                OnNextHandler /*Comment*/, 
+                           ex => { /*TODO: handle this!*/ }, 
                 /*Comment*/OnCompletedHandler
                 );";
 
@@ -220,8 +181,7 @@ namespace Test
             expected = @"observable.Subscribe(
                 onNext: OnNextHandler /*Comment*/,
                 onCompleted: /*Comment*/OnCompletedHandler,
-                onError: ex => { /*TODO: handle this!*/ }
-                );";
+                onError: ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -239,7 +199,7 @@ namespace Test
                 {
 
                 } /*
-                */,
+                */, 
                 ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -257,8 +217,9 @@ namespace Test
                 _ =>
                 {
 
-                } /*Comment after onNext*/
-                , ex => { /*TODO: handle this!*/ }, () => { });";
+                } /*Comment after onNext*/, 
+                ex => { /*TODO: handle this!*/ }, 
+                () => { });";
 
             yield return new object[]
             {
@@ -269,9 +230,8 @@ namespace Test
                         _ => { }
                         );";
             expected = @"observable.Subscribe(
-                        _ => { },
-                        ex => { /*TODO: handle this!*/ }
-                        );";
+                        _ => { }, 
+                        ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -285,7 +245,7 @@ namespace Test
             expected = @"observable.Subscribe(_ =>
             {
 
-            },
+            }, 
             ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -297,9 +257,8 @@ namespace Test
                             nextValue => { }
             );";
             expected = @"observable.Subscribe( /* Comment before onNext */
-                            nextValue => { },
-                            ex => { /*TODO: handle this!*/ }
-            );";
+                            nextValue => { }, 
+                            ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -345,7 +304,7 @@ namespace Test
             actual = @"observable.Subscribe( /* Comment before onNext */
                             nextValue => { });";
             expected = @"observable.Subscribe( /* Comment before onNext */
-                            nextValue => { },
+                            nextValue => { }, 
                             ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
@@ -355,21 +314,21 @@ namespace Test
 
             actual = @"observable.Subscribe(nextValue => { Console.WriteLine(); },
                 () => { /*Some comment*/ });";
-            expected = @"observable.Subscribe(nextValue => { Console.WriteLine(); },
-                ex => { /*TODO: handle this!*/ },
+            expected = @"observable.Subscribe(nextValue => { Console.WriteLine(); }, 
+                ex => { /*TODO: handle this!*/ }, 
                 () => { /*Some comment*/ });";
 
             yield return new object[]
             {
-                new SourceFixture(FormatSrc(actual), FormatSrc(expected)) 
+                new SourceFixture(FormatSrc(actual), FormatSrc(expected))
             };
 
             actual = @"observable.Subscribe(
                             nextValue => { Console.WriteLine(); },
                             () => { /*Some comment*/ });";
             expected = @"observable.Subscribe(
-                            nextValue => { Console.WriteLine(); },
-                            ex => { /*TODO: handle this!*/ },
+                            nextValue => { Console.WriteLine(); }, 
+                            ex => { /*TODO: handle this!*/ }, 
                             () => { /*Some comment*/ });";
 
             yield return new object[]
@@ -382,8 +341,7 @@ namespace Test
             );";
             expected = @"observable.Subscribe( /* Comment before onNext */
                             onNext: nextValue => { } /*OnNext argument trailing comment*/,
-                            onError: ex => { /*TODO: handle this!*/ }
-            );";
+                            onError: ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {
@@ -416,8 +374,7 @@ namespace Test
                                     onCompleted: () => { }, onNext: nextValue => { }
             );";
             expected = @"observable.Subscribe(
-                                    onCompleted: () => { }, onNext: nextValue => { }, onError: ex => { /*TODO: handle this!*/ }
-            );";
+                                    onCompleted: () => { }, onNext: nextValue => { }, onError: ex => { /*TODO: handle this!*/ });";
 
             yield return new object[]
             {

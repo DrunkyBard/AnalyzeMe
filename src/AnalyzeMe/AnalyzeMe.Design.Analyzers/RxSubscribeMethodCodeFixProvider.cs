@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,126 +53,23 @@ namespace AnalyzeMe.Design.Analyzers
             var lastArgument = oldArguments.Arguments.Last();
             var onErrorNameColon = SyntaxFactory.NameColon("onError");
             var onErrorArgument = CreateOnErrorLambdaArgument(onErrorNameColon);
-            onErrorArgument = FormatOnErrorArgument(onErrorArgument, lastArgument);
-            var lastComma = lastArgument.GetPreviousComma();
-            var hasEol = lastComma.TrailingTrivia.Any(t => t.IsKind(SyntaxKind.EndOfLineTrivia));
 
-            var eolTrivia = hasEol || (oldArguments.Arguments.Count == 1 && oldArguments.OpenParenToken.TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
-                ? SyntaxFactory.EndOfLine(Environment.NewLine)
-                : SyntaxFactory.Whitespace(String.Empty);
-            var onErrorComma = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, SyntaxTriviaList.Create(eolTrivia));
-            var newArguments = oldArguments
-                .Arguments
-                .Take(oldArguments.Arguments.Count - 1)
-                .Union(new[] { lastArgument.WithoutEolTrivia(), onErrorArgument });
-            var newCommas = oldArguments.Arguments.GetSeparators().ToList();
-            newCommas.Add(onErrorComma);
-
-            return oldArguments.WithArguments(SyntaxFactory.SeparatedList(newArguments, newCommas));
+            return onErrorArgument
+                .InsertAfter(lastArgument)
+                .Format(oldArguments)
+                .Parent
+                .As<ArgumentListSyntax>()
+                .Value;
         }
 
         private ArgumentListSyntax CreateSimpleArgumentsFrom(ArgumentListSyntax oldArguments)
         {
             return CreateOnErrorLambdaArgument()
                 .InsertAfter(oldArguments.Arguments.First())
-                .Format()
+                .Format(oldArguments)
                 .Parent
                 .As<ArgumentListSyntax>()
                 .Value;
-
-
-            var onNextArgument = oldArguments.Arguments.First();
-            var afterOnNextArguments = oldArguments.Arguments.Skip(1).ToArray();
-            var firstAfterOnNextArg = afterOnNextArguments.FirstOrDefault();
-            var onErrorArgument = FormatOnErrorArgument(CreateOnErrorLambdaArgument(), onNextArgument, firstAfterOnNextArg);
-            var afterOnNextCommaToken = SyntaxFactory.Token(SyntaxKind.None);
-            SyntaxTriviaList trailingCommaTokenTrivia = SyntaxTriviaList.Empty;
-
-            if (firstAfterOnNextArg == null)
-            {
-                var openParenAndOnNextArgInOneLine = onNextArgument
-                    .Parent
-                    .As<ArgumentListSyntax>()
-                    .Value
-                    .OpenParenToken
-                    .GetStartLinePosition() == onNextArgument.GetStartLinePosition();
-                var onNextArgInOneLine = onNextArgument.GetStartLinePosition() == onNextArgument.GetEndLinePosition();
-
-                if (!openParenAndOnNextArgInOneLine || !onNextArgInOneLine)
-                {
-                    onNextArgument = onNextArgument.WithoutEolTrivia();
-                    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(SyntaxFactory.EndOfLine(Environment.NewLine));
-                }
-                //else
-                //{
-                //    trailingCommaTokenTrivia = trailingCommaTokenTrivia.Add(WhiteSpace);
-                //}
-            }
-            else
-            {
-                afterOnNextCommaToken = firstAfterOnNextArg.GetPreviousComma();
-
-                SyntaxTriviaList a;
-
-                if (afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia))
-                {
-                    a = new SyntaxTriviaList().Add(SyntaxFactory.EndOfLine(Environment.NewLine));
-                }
-                else
-                {
-                    a = afterOnNextCommaToken.TrailingTrivia;
-                    afterOnNextCommaToken = afterOnNextCommaToken.WithTrailingTrivia(WhiteSpace);
-                }
-
-                //var a = afterOnNextCommaToken.TrailingTrivia.Any(SyntaxKind.EndOfLineTrivia)
-                //    ? SyntaxFactory.EndOfLine(Environment.NewLine)
-                //    : WhiteSpace;
-                //trailingCommaTokenTrivia = new SyntaxTriviaList().Add(a);
-                trailingCommaTokenTrivia = a;
-            }
-
-            var onErrorCommaToken = SyntaxFactory.Token(SyntaxTriviaList.Empty, SyntaxKind.CommaToken, trailingCommaTokenTrivia);
-            var otherArgumentCommaTokens = oldArguments.Arguments.GetSeparators().Skip(1);
-            var tList = new List<SyntaxToken>();
-
-            if (!afterOnNextCommaToken.IsKind(SyntaxKind.None))
-            {
-                tList.Add(afterOnNextCommaToken);
-            }
-            tList.Add(onErrorCommaToken);
-
-            tList.AddRange(otherArgumentCommaTokens);
-
-            var subscribeMethodArguments = new[]
-            {
-                onNextArgument,
-                onErrorArgument
-            }.Union(afterOnNextArguments);
-
-            return oldArguments.WithArguments(SyntaxFactory.SeparatedList(subscribeMethodArguments, tList));
-        }
-
-        private ArgumentSyntax FormatOnErrorArgument(ArgumentSyntax onErrorArgument, ArgumentSyntax onNextArgument, ArgumentSyntax firstArgumentAfterOnNext = null)
-        {
-            SyntaxTrivia whitespace = SyntaxFactory.Whitespace(String.Empty);
-
-            if (firstArgumentAfterOnNext != null)
-            {
-                if (firstArgumentAfterOnNext.GetPreviousComma().TrailingTrivia.Any(x => x.IsKind(SyntaxKind.EndOfLineTrivia)))
-                {
-                    whitespace = firstArgumentAfterOnNext.Expression.ExtractWhitespace();
-                }
-
-                return onErrorArgument.WithLeadingTrivia(whitespace);
-            }
-
-            var trailingEol = onNextArgument.GetTrailingTrivia().LastOrDefault().IsKind(SyntaxKind.EndOfLineTrivia)
-                ? SyntaxFactory.EndOfLine(Environment.NewLine)
-                : SyntaxFactory.Whitespace(String.Empty);
-
-            whitespace = onNextArgument.Expression.ExtractWhitespace();
-
-            return onErrorArgument.WithLeadingTrivia(whitespace).WithTrailingTrivia(trailingEol);
         }
 
         private ArgumentSyntax CreateOnErrorLambdaArgument(NameColonSyntax nameColon = null)

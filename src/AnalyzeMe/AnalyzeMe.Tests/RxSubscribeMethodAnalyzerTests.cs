@@ -22,25 +22,7 @@ namespace AnalyzeMe.Tests
         [Theory, MemberData("MethodInvocationDoesNotHaveOnErrorParameter", MemberType = typeof(RxSubscribeMethodTestFixtures))]
         public void WhenSubscribeMethodInvocationDoesNotHaveOnErrorParameter_ThenDiagnosticShouldBeThrown(SourceFixture srcFixture)
         {
-            //VerifyCSharpDiagnostic(
-            //    originSource,
-            //    CreateDiagnostic(32, 13),
-            //    CreateDiagnostic(38, 13),
-            //    CreateDiagnostic(44, 13),
-            //    CreateDiagnostic(47, 13),
-            //    CreateDiagnostic(51, 13),
-            //    CreateDiagnostic(54, 13),
-            //    CreateDiagnostic(57, 13),
-            //    CreateDiagnostic(60, 13),
-            //    CreateDiagnostic(63, 13),
-            //    CreateDiagnostic(65, 13),
-            //    CreateDiagnostic(67, 13),
-            //    CreateDiagnostic(70, 13),
-            //    CreateDiagnostic(73, 13),
-            //    CreateDiagnostic(75, 13),
-            //    CreateDiagnostic(77, 13),
-            //    CreateDiagnostic(80, 13),
-            //    CreateDiagnostic(82, 13));
+            VerifyCSharpDiagnostic(srcFixture.Actual, CreateDiagnostic(35, 13));
             VerifyCSharpFix(srcFixture.Actual, srcFixture.Expected);
         }
 
