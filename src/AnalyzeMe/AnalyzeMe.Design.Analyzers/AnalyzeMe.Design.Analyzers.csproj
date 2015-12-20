@@ -38,6 +38,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
     <None Include="app.config" />
     <None Include="packages.config" />
+    <Compile Include="CallVirtualInConstructorCodeFixProvider.cs" />
     <Compile Include="Utils\NodeFormatter.cs" />
     <Compile Include="Utils\SyntaxNodeExtensions.MethodArguments.cs" />
   </ItemGroup>

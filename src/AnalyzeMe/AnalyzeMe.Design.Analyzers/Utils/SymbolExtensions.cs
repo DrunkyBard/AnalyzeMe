@@ -9,6 +9,18 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
     public static class SymbolExtensions
     {
+        public static IMethodSymbol GetOriginMethodSymbol(this IMethodSymbol overridenMethod)
+        {
+            var originMethod = overridenMethod;
+
+            while (originMethod.OverriddenMethod != null)
+            {
+                originMethod = originMethod.OverriddenMethod;
+            }
+
+            return originMethod;
+        }
+
         /// <summary>
         /// Find all derived types for <paramref name="type"/> symbol.
         /// </summary>
