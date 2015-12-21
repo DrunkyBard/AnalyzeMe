@@ -13,15 +13,15 @@ namespace AnalyzeMe.Design.Analyzers
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(CallVirtualInConstructorCodeFixProvider)), Shared]
     internal class CallVirtualInConstructorCodeFixProvider : CodeFixProvider
     {
-        public override sealed ImmutableArray<string> FixableDiagnosticIds
+        public sealed override ImmutableArray<string> FixableDiagnosticIds
             => ImmutableArray.Create(CallVirtualInConstructorAnalyzer.MethodCanBeMarkedAsSealedId);
 
-        public override sealed FixAllProvider GetFixAllProvider()
+        public sealed override FixAllProvider GetFixAllProvider()
         {
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        public override sealed async Task RegisterCodeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
