@@ -80,7 +80,7 @@ namespace AnalyzeMe.Tests
                                     : OverrideMethodDeclaration)
                 .Replace("{3}", derivedSubTypeCtorVirtualMethodCall)
                 .Replace("{4}", derivedSubTypeOverrideVirtualMethod
-                                    ? derivedSubTypeCtorContainsVirtualMethodCall ? OverrideSealedMethodDeclaration : OverrideMethodDeclaration
+                                    ? derivedSubTypeCtorContainsVirtualMethodCall ? Environment.NewLine + Environment.NewLine + OverrideSealedMethodDeclaration : Environment.NewLine + Environment.NewLine + OverrideMethodDeclaration
                                     : string.Empty);
             
             return new SourceFixture(originSrc, fixedSrc);

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -21,20 +22,14 @@ namespace AnalyzeMe.Design.Analyzers
             return WellKnownFixAllProviders.BatchFixer;
         }
 
+        //TODO: If diagnostic in derived type, and derived type dont override virtual method, and this type doesnt have sub types, then mark this type as sealed.
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
-            var diagnosticSpan = diagnostic.Location.SourceSpan;
-            var n = root.FindNode(diagnostic.Location.SourceSpan);
-            var declaration = root.FindToken(diagnosticSpan.Start);
-            var s = context.Document.GetSemanticModelAsync().Result.GetSymbolInfo(n);
-            var ds = context.Document.Project.Solution.Projects
-                .SelectMany(x => x.Documents
-                    .Select(z => s.Symbol.Locations
-                        .Where(l => l.SourceTree.FilePath == z.FilePath)))
-                .ToArray();
-            var locs = s.Symbol.Locations
+            var diagnosticNode = root.FindNode(diagnostic.Location.SourceSpan);
+            var diagnosticSymbolInfo = context.Document.GetSemanticModelAsync().Result.GetSymbolInfo(diagnosticNode);
+            var fixedDocuments = diagnosticSymbolInfo.Symbol.Locations
                 .Select(async x =>
                 {
                     var methodDeclaration = (MethodDeclarationSyntax)x.SourceTree.GetRoot().FindNode(x.SourceSpan);
@@ -42,22 +37,22 @@ namespace AnalyzeMe.Design.Analyzers
                         .WithModifiers(methodDeclaration.Modifiers.Add(SyntaxFactory.Token(SyntaxKind.SealedKeyword)));
                     var document = context.Document.Project.Solution.Projects
                         .SelectMany(y => y.Documents)
-                        .Single(y => y.Name == x.SourceTree.FilePath);
-                    var sRoot = await document.GetSyntaxRootAsync();
-                    sRoot = sRoot.ReplaceNode(methodDeclaration, newMethodDeclaration);
-                    document = document.WithSyntaxRoot(sRoot);
+                        .Single(y => y.Name == Path.GetFileName(x.SourceTree.FilePath));
+                    var documentSyntaxRoot = await document.GetSyntaxRootAsync();
+                    documentSyntaxRoot = documentSyntaxRoot.ReplaceNode(methodDeclaration, newMethodDeclaration);
+                    document = document.WithSyntaxRoot(documentSyntaxRoot);
 
                     return document;
                 })
                 .ToArray();
 
-            await Task.WhenAll(locs)
+            await Task.WhenAll(fixedDocuments)
                 .ContinueWith(x =>
                 {
                     foreach (var v in x.Result)
                     {
                         context.RegisterCodeFix(
-                            CodeAction.Create("Mark as sealed", c => Task.FromResult(v), "MarkMethodWithSealedModifier"),
+                            CodeAction.Create("Mark method as sealed", _ => Task.FromResult(v), "MarkMethodWithSealedModifier"),
                             diagnostic);
                     }
                 });

@@ -14,12 +14,7 @@ namespace AnalyzeMe.Design.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class CallVirtualInConstructorAnalyzer : DiagnosticAnalyzer
     {
-        public CallVirtualInConstructorAnalyzer()
-        {
-
-        }
-
-        public const string VirtualMethodCallInConstructorId = "CA2214:DoNotCallOverridableMethodsInConstructors";
+        public const string VirtualMethodCallInConstructorId = "CA2214DoNotCallOverridableMethodsInConstructors"; //TODO: Id should contain only alphanumeric, connecting and combining characters
         public static string MethodCanBeMarkedAsSealedId {get;} = VirtualMethodCallInConstructorId + "MethodCanBeMarkedAsSealed";
         internal static readonly LocalizableString VirtualMethodCallInConstructorTitle = "Class can be marked as sealed.";
         internal static readonly LocalizableString VirtualMethodCallInConstructorMessageFormat =
@@ -73,7 +68,7 @@ namespace AnalyzeMe.Design.Analyzers
             {
                 var virtualMethodSymbolLazy = new Lazy<IMethodSymbol>(() => (IMethodSymbol)semanticModel.GetSymbolInfo(optional.Value).Symbol);
 
-                if (optional.HasValue && IsMethodVirtual(optional.Value, virtualMethodSymbolLazy))
+                if (optional.HasValue && virtualMethodSymbolLazy.Value != null && IsMethodVirtual(optional.Value, virtualMethodSymbolLazy) && !virtualMethodSymbolLazy.Value.IsSealed)
                 {
                     var diagnostic = await CreateDiagnosticsAsync(optional.Value.GetLocation(), virtualMethodSymbolLazy.Value, classType, ctorDeclaration, ctx.CancellationToken);
                     ctx.ReportDiagnostic(diagnostic);
@@ -89,15 +84,15 @@ namespace AnalyzeMe.Design.Analyzers
             CancellationToken cancellationToken)
         {
             Workspace ws;
-            var derivedClasses = Enumerable.Empty<INamedTypeSymbol>();
+            var derivedClasses = Enumerable.Empty<INamedTypeSymbol>().ToArray();
             DiagnosticDescriptor diagnosticDescriptor;
 
             if (classCtorWhichContainsVirtualMethodCall.TryGetWorkspace(out ws))
             {
-                derivedClasses = await classSymbolWhichContainsVirtualMethodCall.FindDerivedClassesAsync(ws.CurrentSolution, cancellationToken);
+                derivedClasses = (await classSymbolWhichContainsVirtualMethodCall.FindDerivedClassesAsync(ws.CurrentSolution, cancellationToken)).ToArray();
             }
 
-            if (derivedClasses.Any(t => TypeContainsOverridableMethod(t, virtualMethodSymbol.GetOriginMethodSymbol())) && virtualMethodSymbol.IsOverride)
+            if ((!TypeContainsOverridableMethod(classSymbolWhichContainsVirtualMethodCall, virtualMethodSymbol) || derivedClasses.Any(t => TypeContainsOverridableMethod(t, virtualMethodSymbol.GetOriginMethodSymbol()))) && virtualMethodSymbol.IsOverride)
             {
                 diagnosticDescriptor = VirtualMethodCallInConstructorRule;
             }
