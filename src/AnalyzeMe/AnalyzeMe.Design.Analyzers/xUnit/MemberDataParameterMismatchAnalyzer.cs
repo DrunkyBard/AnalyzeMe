@@ -1,5 +1,9 @@
 ﻿using System.Collections.Immutable;
+using System.Linq;
+using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace AnalyzeMe.Design.Analyzers.xUnit
@@ -22,6 +26,26 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
 		public override void Initialize(AnalysisContext context)
 		{
+			context.RegisterSyntaxNodeAction(AnalyzeMethodWithMemberDataAttribute, SyntaxKind.MethodDeclaration);
+		}
+
+		private void AnalyzeMethodWithMemberDataAttribute(SyntaxNodeAnalysisContext ctx)
+		{
+			var memberDataAttributes = ctx.Node
+				.As<MethodDeclarationSyntax>()
+				.Value
+				.AttributeLists
+				.SelectMany(x => x.Attributes)
+				.Where(x => x.Name.ToString() == "MemberData")
+				.ToArray();
+
+			var a = memberDataAttributes[0];
+			var c = ctx.SemanticModel.GetDeclaredSymbol(a, ctx.CancellationToken);
+
+			if (!memberDataAttributes.Any())
+			{
+				return;
+			}
 		}
 	}
 }

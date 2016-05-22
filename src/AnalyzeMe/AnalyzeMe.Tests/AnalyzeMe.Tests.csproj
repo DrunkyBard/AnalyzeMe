@@ -110,9 +110,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CallVirtualInConstructorAnalyzerTests.cs" />
+    <Compile Include="Helpers\StringExtensions.cs" />
     <Compile Include="NullCollectionMethodAnalyzerTests.cs" />
     <Compile Include="RxSubscribeMethodAnalyzerTests.cs" />
     <Compile Include="SealedClassAnalyzerTests.cs" />
+    <Compile Include="TestFixtures\MemberDataParameterMismatchTestFixtures.cs" />
     <Compile Include="TestFixtures\RxSubscribeMethodTestFixtures.cs" />
     <Compile Include="TestFixtures\SourceFixture.cs" />
     <Compile Include="Verifiers\CodeFixVerifier.cs" />
