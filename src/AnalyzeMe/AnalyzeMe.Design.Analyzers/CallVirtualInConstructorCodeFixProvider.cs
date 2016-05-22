@@ -22,7 +22,6 @@ namespace AnalyzeMe.Design.Analyzers
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        //TODO: If diagnostic in derived type, and derived type dont override virtual method, and this type doesnt have sub types, then mark this type as sealed.
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);

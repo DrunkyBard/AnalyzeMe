@@ -36,6 +36,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <Compile Include="xUnit\MemberDataParameterMismatchAnalyzer.cs" />
+    <Compile Include="xUnit\MemberDataParameterMismatchCodeFixProvider.cs" />
     <None Include="app.config" />
     <Compile Include="CallVirtualInConstructorCodeFixProvider.cs" />
     <Compile Include="Utils\NodeFormatter.cs" />
