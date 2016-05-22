@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
@@ -36,11 +37,9 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				.Value
 				.AttributeLists
 				.SelectMany(x => x.Attributes)
-				.Where(x => x.Name.ToString() == "MemberData")
-				.ToArray();
-
-			var a = memberDataAttributes[0];
-			var c = ctx.SemanticModel.GetDeclaredSymbol(a, ctx.CancellationToken);
+                .Select(attrSyntax => new Tuple<AttributeSyntax, SymbolInfo>(attrSyntax, ctx.SemanticModel.GetSymbolInfo(attrSyntax, ctx.CancellationToken)))
+                .Where(x => x.Item2.Symbol != null && x.Item2.Symbol.ContainingType.ToString().Equals("Xunit.MemberDataAttribute"))
+                .ToArray();
 
 			if (!memberDataAttributes.Any())
 			{

@@ -111,6 +111,7 @@
   <ItemGroup>
     <Compile Include="CallVirtualInConstructorAnalyzerTests.cs" />
     <Compile Include="Helpers\StringExtensions.cs" />
+    <Compile Include="MemberDataParameterMismatchTests.cs" />
     <Compile Include="NullCollectionMethodAnalyzerTests.cs" />
     <Compile Include="RxSubscribeMethodAnalyzerTests.cs" />
     <Compile Include="SealedClassAnalyzerTests.cs" />
