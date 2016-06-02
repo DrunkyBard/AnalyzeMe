@@ -45,6 +45,29 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 			{
 				return;
 			}
+
+		    foreach (var memberDataAttribute in memberDataAttributes)
+		    {
+		        var memberNameParameter =
+		            memberDataAttribute
+		                .Item1
+		                .ArgumentList
+		                .Arguments
+		                .FirstOrDefault();
+
+		        if (memberNameParameter == null || memberNameParameter?.NameEquals != null || memberNameParameter?.NameColon.ToString() != "memberName")
+		        {
+		            continue;
+		        }
+
+		        var memberTypeParameter = 
+                    memberDataAttribute
+		                .Item1
+		                .ArgumentList
+		                .Arguments
+		                .FirstOrDefault(x => x.NameEquals != null && x.NameEquals.Name.ToString() == "MemberType" && x.Expression != null);
+		    }
+
 		}
 	}
 }

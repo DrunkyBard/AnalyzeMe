@@ -8,7 +8,8 @@ namespace AnalyzeMe.Tests
 {
 	public sealed class MemberDataParameterMismatchTests : CodeFixVerifier
 	{
-		[Theory, MemberData("OuterCorrectTestFixture", MemberType = typeof(MemberDataParameterMismatchTestFixtures))]
+		[Theory]
+        [MemberData(memberName: nameof(MemberDataParameterMismatchTestFixtures.OuterCorrectTestFixture), MemberType = typeof(MemberDataParameterMismatchTestFixtures))]
 		public void Test(string src)
 		{
 			VerifyCSharpDiagnostic(src);
