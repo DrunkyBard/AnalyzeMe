@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace AnalyzeMe.Design.Analyzers.xUnit
 {
@@ -55,10 +57,10 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		                .Arguments
 		                .FirstOrDefault();
 
-		        if (memberNameParameter == null || memberNameParameter?.NameEquals != null || memberNameParameter?.NameColon.ToString() != "memberName")
-		        {
-		            continue;
-		        }
+		        //if (memberNameParameter == null || memberNameParameter.NameEquals != null || memberNameParameter.NameColon.ToString() != "memberName")
+		        //{
+		        //    continue;
+		        //}
 
 		        var memberTypeParameter = 
                     memberDataAttribute
@@ -66,8 +68,32 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		                .ArgumentList
 		                .Arguments
 		                .FirstOrDefault(x => x.NameEquals != null && x.NameEquals.Name.ToString() == "MemberType" && x.Expression != null);
+
+			    Workspace ws;
+			    ctx.Node.TryGetWorkspace(out ws);
+
+			    var testFixtureClass = memberTypeParameter == null
+				    ? ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node)
+				    : FindClassDeclaration(ws, memberTypeParameter.ToFullString());
 		    }
 
+		}
+
+		private ISymbol FindClassDeclaration(Workspace workspace, string name)
+		{
+			var a = workspace
+				.CurrentSolution
+				.Projects
+				.Select(p => SymbolFinder.FindDeclarationsAsync(p, name, false))
+				.ToArray();
+			var res = Task
+				.WhenAll(a)
+				.ContinueWith(t => t.Result)
+				.Result
+				.SelectMany(x => x)
+				.ToArray();
+
+			return null;
 		}
 	}
 }
