@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
@@ -32,7 +34,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 			context.RegisterSyntaxNodeAction(AnalyzeMethodWithMemberDataAttribute, SyntaxKind.MethodDeclaration);
 		}
 
-		private void AnalyzeMethodWithMemberDataAttribute(SyntaxNodeAnalysisContext ctx)
+		private async void AnalyzeMethodWithMemberDataAttribute(SyntaxNodeAnalysisContext ctx)
 		{
 			var memberDataAttributes = ctx.Node
 				.As<MethodDeclarationSyntax>()
@@ -57,43 +59,98 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		                .Arguments
 		                .FirstOrDefault();
 
-		        //if (memberNameParameter == null || memberNameParameter.NameEquals != null || memberNameParameter.NameColon.ToString() != "memberName")
-		        //{
-		        //    continue;
-		        //}
+		        if (memberNameParameter == null || memberNameParameter.NameColon != null && memberNameParameter.NameColon.ToString() != "memberName")
+				{
+					continue;
+				}
 
-		        var memberTypeParameter = 
+				var memberNameVisitor = new MemberNameExpressionVisitor();
+			    var fixtureMethodName = memberNameParameter.Expression.Accept(memberNameVisitor);
+
+				var memberTypeParameter = 
                     memberDataAttribute
 		                .Item1
 		                .ArgumentList
 		                .Arguments
-		                .FirstOrDefault(x => x.NameEquals != null && x.NameEquals.Name.ToString() == "MemberType" && x.Expression != null);
+		                .FirstOrDefault(x => x.NameEquals != null && 
+										x.NameEquals.Name.ToString().Equals("MemberType", StringComparison.OrdinalIgnoreCase) && 
+										x.Expression != null &&
+										x.Expression.As<TypeOfExpressionSyntax>().HasValue);
 
-			    Workspace ws;
+				Workspace ws;
 			    ctx.Node.TryGetWorkspace(out ws);
 
 			    var testFixtureClass = memberTypeParameter == null
-				    ? ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node)
-				    : FindClassDeclaration(ws, memberTypeParameter.ToFullString());
+				    ? (INamedTypeSymbol)ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node).ReceiverType
+				    : await FindClassDeclaration(ws, ((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type.ToFullString(), ctx.CancellationToken);
+
+			    if (testFixtureClass == null)
+			    {
+				    return;
+			    }
+
+			    var g = testFixtureClass
+				    .DeclaringSyntaxReferences
+					.SelectMany(syntaxRef => syntaxRef
+									.GetSyntax(ctx.CancellationToken)
+									.As<ClassDeclarationSyntax>()
+									.Value
+									.Members
+									.Select(m => m.As<MethodDeclarationSyntax>()))
+					.Where(methodDeclarationOpt => methodDeclarationOpt.HasValue && 
+												   methodDeclarationOpt.Value.Identifier.ToFullString() == fixtureMethodName);
 		    }
 
 		}
 
-		private ISymbol FindClassDeclaration(Workspace workspace, string name)
+		private async Task<INamedTypeSymbol> FindClassDeclaration(Workspace workspace, string name, CancellationToken ct)
 		{
-			var a = workspace
+			return await workspace
 				.CurrentSolution
 				.Projects
-				.Select(p => SymbolFinder.FindDeclarationsAsync(p, name, false))
-				.ToArray();
-			var res = Task
-				.WhenAll(a)
-				.ContinueWith(t => t.Result)
-				.Result
-				.SelectMany(x => x)
-				.ToArray();
+				.Select(async p => await SymbolFinder.FindDeclarationsAsync(p, name, false, ct))
+				.WhenAll()
+				.ContinueWith(t => t
+								.Result
+								.SelectMany(x => x)
+								.FirstOrDefault()
+								.As<INamedTypeSymbol>()
+								.Value, ct);
+		}
 
-			return null;
+		private class MemberNameExpressionVisitor : CSharpSyntaxVisitor<string>
+		{
+			public override string VisitInvocationExpression(InvocationExpressionSyntax node)
+			{
+				var nameofIdentifier = node.Expression.As<IdentifierNameSyntax>();
+				var correctNameofInvocation =
+					nameofIdentifier.HasValue &&
+					nameofIdentifier.Value.ToFullString() == "nameof" &&
+					node.ArgumentList.Arguments.Count == 1;
+
+				if (!correctNameofInvocation)
+				{
+					return string.Empty;
+				}
+
+				var callingMember = node.ArgumentList.Arguments.Single().Expression;
+
+				Debug.Assert(callingMember is MemberAccessExpressionSyntax || callingMember is IdentifierNameSyntax);
+
+				var memberAccessSyntax = callingMember as MemberAccessExpressionSyntax;
+
+				if (memberAccessSyntax != null)
+				{
+					return memberAccessSyntax.Name.ToFullString();
+				}
+
+				return ((IdentifierNameSyntax) callingMember).Identifier.ToFullString();
+			}
+
+			public override string VisitLiteralExpression(LiteralExpressionSyntax node)
+			{
+				return node.Token.ValueText;
+			}
 		}
 	}
 }

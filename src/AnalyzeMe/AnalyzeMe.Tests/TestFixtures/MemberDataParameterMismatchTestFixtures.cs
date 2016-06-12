@@ -4,7 +4,7 @@ using Xunit;
 
 namespace AnalyzeMe.Tests.TestFixtures
 {
-	public sealed class MemberDataParameterMismatchTestFixtures
+	public sealed partial class MemberDataParameterMismatchTestFixtures
 	{
 		private const string MemberDataDeclaration = @"
 using Xunit;
@@ -22,7 +22,11 @@ namespace Xunit
 }";
 
 		private static string TestFixtureClass = @"
-public static class TestFixture
+public partial class TestFixture {
+	public void A(){}
+}
+
+public partial class TestFixture
 {
 	public static System.Collections.Generic.IEnumerable<object[]> CorrectTestFixture()
 	{
@@ -41,7 +45,8 @@ public static class TestFixture
 
 		private const string InnerWrongMemberData = @"[Xunit.MemberData(""WrongTestFixture"")]";
 
-		private const string OuterCorrectMemberData = @"[MemberData(""CorrectTestFixture"", MemberType = typeof(TestFixture))]";
+		//private const string OuterCorrectMemberData = @"[MemberData(""CorrectTestFixture"", MemberType = typeof(TestFixture))]";
+		private const string OuterCorrectMemberData = @"[MemberData(nameof(CorrectTestFixture), MemberType = typeof(TestFixture))]";
 
 		private const string OuterWrongMemberData = @"[Xunit.MemberData(""WrongTestFixture"", , MemberType = typeof(TestFixture))]";
 
@@ -51,6 +56,7 @@ public class TestClass
 	@MemberDataPlaceHolder@
 	public void TestMethod(int a, string b, bool c)
 	{
+		var a = TestFixture.CorrectTestFixture();
 	}
 
 	public static System.Collections.Generic.IEnumerable<object[]> CorrectTestFixture()
