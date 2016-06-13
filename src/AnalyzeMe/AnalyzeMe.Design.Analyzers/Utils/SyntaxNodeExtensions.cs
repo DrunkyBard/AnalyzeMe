@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -284,5 +286,26 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 
             return node.ReplaceToken(replacementToken, newTokenFunc(replacementToken));
         }
+
+	    public static async Task<SemanticModel> GetSemanticModel(this SyntaxNode node, Solution sln, CancellationToken ct)
+	    {
+		    var root = await node.SyntaxTree.GetRootAsync(ct);
+		    SyntaxNode docRoot;
+
+		    var containingDocument = sln
+			    .Projects
+			    .SelectMany(p => p.Documents)
+			    .SingleOrDefault(doc => doc.SupportsSyntaxTree &&
+			                  doc.SupportsSemanticModel &&
+			                  doc.TryGetSyntaxRoot(out docRoot) &&
+			                  docRoot.IsEquivalentTo(root));
+
+		    if (containingDocument == null)
+		    {
+			    throw new InvalidOperationException("Passed node should be in current solution");
+		    }
+
+			return await containingDocument.GetSemanticModelAsync(ct);
+	    }
     }
 }

@@ -5,9 +5,9 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 {
 	public static class TplExtensions
 	{
-		public static Task<TOutput[]> WhenAll<TOutput>(this IEnumerable<Task<TOutput>> taskArray)
+		public static async Task<TOutput[]> WhenAll<TOutput>(this IEnumerable<Task<TOutput>> taskArray)
 		{
-			return Task.WhenAll(taskArray);
+			return await Task.WhenAll(taskArray).ConfigureAwait(false);
 		}
 	}
 }

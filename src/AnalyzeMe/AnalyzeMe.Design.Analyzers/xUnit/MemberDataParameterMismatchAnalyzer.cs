@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -65,7 +66,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				}
 
 				var memberNameVisitor = new MemberNameExpressionVisitor();
-			    var fixtureMethodName = memberNameParameter.Expression.Accept(memberNameVisitor);
+			    var fixtureMemberName = memberNameParameter.Expression.Accept(memberNameVisitor);
 
 				var memberTypeParameter = 
                     memberDataAttribute
@@ -79,15 +80,19 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
 				Workspace ws;
 			    ctx.Node.TryGetWorkspace(out ws);
+			    var nam =ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node).ReceiverType.Name;
 
-			    var testFixtureClass = memberTypeParameter == null
+
+				var testFixtureClass = memberTypeParameter == null
 				    ? (INamedTypeSymbol)ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node).ReceiverType
-				    : await FindClassDeclaration(ws, ((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type.ToFullString(), ctx.CancellationToken);
+				    : FindClassDeclaration(ws, ((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type.ToFullString(), ctx.CancellationToken);
 
 			    if (testFixtureClass == null)
 			    {
 				    return;
 			    }
+
+				var diagnosticVisitor = new TestFixtureMemberVisitor(fixtureMemberName, ctx, ws.CurrentSolution);
 
 			    var g = testFixtureClass
 				    .DeclaringSyntaxReferences
@@ -96,27 +101,92 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 									.As<ClassDeclarationSyntax>()
 									.Value
 									.Members
-									.Select(m => m.As<MethodDeclarationSyntax>()))
-					.Where(methodDeclarationOpt => methodDeclarationOpt.HasValue && 
-												   methodDeclarationOpt.Value.Identifier.ToFullString() == fixtureMethodName);
+									.Where(m => m is MethodDeclarationSyntax || m is PropertyDeclarationSyntax)
+							   )
+					.Select(d => d.Accept(diagnosticVisitor))
+					.ToArray();
 		    }
 
 		}
 
-		private async Task<INamedTypeSymbol> FindClassDeclaration(Workspace workspace, string name, CancellationToken ct)
+		private  INamedTypeSymbol FindClassDeclaration(Workspace workspace, string name, CancellationToken ct)
 		{
-			return await workspace
+			return workspace
 				.CurrentSolution
 				.Projects
-				.Select(async p => await SymbolFinder.FindDeclarationsAsync(p, name, false, ct))
+				.Select(async p => await SymbolFinder.FindDeclarationsAsync(p, name, false, SymbolFilter.Type, ct))
 				.WhenAll()
 				.ContinueWith(t => t
-								.Result
-								.SelectMany(x => x)
-								.FirstOrDefault()
-								.As<INamedTypeSymbol>()
-								.Value, ct);
+					.Result
+					.SelectMany(x => x)
+					.FirstOrDefault()
+					.As<INamedTypeSymbol>()
+					.Value, ct)
+                .Result;
 		}
+
+		private class TestFixtureMemberVisitor : CSharpSyntaxVisitor<Optional<Diagnostic>>
+		{
+			private readonly string _testFixtureMemberName;
+			private readonly SyntaxNodeAnalysisContext _ctx;
+			private readonly Solution _sln;
+
+			public TestFixtureMemberVisitor(string testFixtureMemberName, SyntaxNodeAnalysisContext ctx, Solution sln)
+			{
+				Contract.Requires(!string.IsNullOrWhiteSpace(testFixtureMemberName));
+
+				_testFixtureMemberName = testFixtureMemberName;
+				_ctx = ctx;
+				_sln = sln;
+			}
+
+			public override Optional<Diagnostic> VisitMethodDeclaration(MethodDeclarationSyntax node)
+			{
+				if (node.Identifier.ToFullString() != _testFixtureMemberName)
+				{
+					return new Optional<Diagnostic>();
+				}
+
+				var returnStatements = node
+					.Body
+					.Statements
+					.Where(s => s is ReturnStatementSyntax || s is YieldStatementSyntax);
+
+				foreach (var returnStatement in returnStatements)
+				{
+				    var retExpression = returnStatement is YieldStatementSyntax
+				        ? ((YieldStatementSyntax) returnStatement).Expression
+				        : ((ReturnStatementSyntax) returnStatement).Expression;
+                    var retExprVisitor = new ReturnExpressionVisitor();
+				    retExpression.Accept(retExprVisitor);
+				}
+
+				return base.VisitMethodDeclaration(node);
+			}
+
+			public override Optional<Diagnostic> VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+			{
+				return base.VisitPropertyDeclaration(node);
+			}
+		}
+
+        private class ReturnExpressionVisitor : CSharpSyntaxVisitor
+        {
+            public override void VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
+            {
+                base.VisitArrayCreationExpression(node);
+            }
+
+            public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+            {
+                base.VisitInvocationExpression(node);
+            }
+
+            public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+            {
+                base.VisitMemberAccessExpression(node);
+            }
+        }
 
 		private class MemberNameExpressionVisitor : CSharpSyntaxVisitor<string>
 		{
