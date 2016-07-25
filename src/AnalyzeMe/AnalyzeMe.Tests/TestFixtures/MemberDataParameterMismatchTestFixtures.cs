@@ -19,6 +19,8 @@ namespace Xunit
 		{
 		}
 	}
+
+public class Q{}
 }";
 
 		private static string TestFixtureClass = @"
@@ -30,9 +32,11 @@ public partial class TestFixture
 {
 	public static System.Collections.Generic.IEnumerable<object[]> CorrectTestFixture()
 	{
-		yield return new object[]{ 1, ""A"", false};
+		yield return new object[]{ 1, ""A"", GetBool()};
 		yield return new object[]{ 2, ""B"", true};
 	}
+
+	private static bool GetBool() => false;
 
 	public static System.Collections.Generic.IEnumerable<object[]> WrongTestFixture()
 	{
@@ -54,7 +58,7 @@ public partial class TestFixture
 public class TestClass
 {
 	@MemberDataPlaceHolder@
-	public void TestMethod(int a, string b, bool c)
+	public void TestMethod(int a, string b, bool c, Xunit.Q u, System.IO.Stream stream)
 	{
 		var a = TestFixture.CorrectTestFixture();
 	}

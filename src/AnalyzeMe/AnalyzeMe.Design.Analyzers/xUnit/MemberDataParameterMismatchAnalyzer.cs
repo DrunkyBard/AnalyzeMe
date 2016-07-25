@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -37,9 +36,8 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
 		private async void AnalyzeMethodWithMemberDataAttribute(SyntaxNodeAnalysisContext ctx)
 		{
-			var memberDataAttributes = ctx.Node
-				.As<MethodDeclarationSyntax>()
-				.Value
+			var methodDeclaration = (MethodDeclarationSyntax)ctx.Node;
+			var memberDataAttributes = methodDeclaration
 				.AttributeLists
 				.SelectMany(x => x.Attributes)
                 .Select(attrSyntax => new Tuple<AttributeSyntax, SymbolInfo>(attrSyntax, ctx.SemanticModel.GetSymbolInfo(attrSyntax, ctx.CancellationToken)))
@@ -85,7 +83,8 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
 				var testFixtureClass = memberTypeParameter == null
 				    ? (INamedTypeSymbol)ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax) ctx.Node).ReceiverType
-				    : FindClassDeclaration(ws, ((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type.ToFullString(), ctx.CancellationToken);
+				    : (INamedTypeSymbol)ctx.SemanticModel.GetSymbolInfo(((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type).Symbol;
+				    //: FindClassDeclaration(ws, ((TypeOfExpressionSyntax)memberTypeParameter.Expression).Type.ToFullString(), ctx.CancellationToken);
 
 			    if (testFixtureClass == null)
 			    {
@@ -106,10 +105,9 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 					.Select(d => d.Accept(diagnosticVisitor))
 					.ToArray();
 		    }
-
 		}
 
-		private  INamedTypeSymbol FindClassDeclaration(Workspace workspace, string name, CancellationToken ct)
+		private INamedTypeSymbol FindClassDeclaration(Workspace workspace, string name, CancellationToken ct)
 		{
 			return workspace
 				.CurrentSolution
@@ -172,8 +170,19 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
         private class ReturnExpressionVisitor : CSharpSyntaxVisitor
         {
-            public override void VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
-            {
+	        private readonly SemanticModel _semantic;
+
+	        public ReturnExpressionVisitor(SemanticModel semantic)
+	        {
+		        _semantic = semantic;
+	        }
+
+	        public override void VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
+	        {
+		        node
+			        .Initializer
+			        .Expressions
+			        .Select(expr => _semantic.GetSymbolInfo(expr));
                 base.VisitArrayCreationExpression(node);
             }
 
