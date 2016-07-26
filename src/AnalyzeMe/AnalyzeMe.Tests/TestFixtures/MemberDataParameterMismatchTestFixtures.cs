@@ -32,8 +32,14 @@ public partial class TestFixture
 {
 	public static System.Collections.Generic.IEnumerable<object[]> CorrectTestFixture()
 	{
-		yield return new object[]{ 1, ""A"", GetBool()};
+		yield return GetData();
+		yield return new object[]{ (byte)1, ""A"", GetBool()};
 		yield return new object[]{ 2, ""B"", true};
+	}
+
+	private static object[] GetData()
+	{
+		return null;
 	}
 
 	private static bool GetBool() => false;

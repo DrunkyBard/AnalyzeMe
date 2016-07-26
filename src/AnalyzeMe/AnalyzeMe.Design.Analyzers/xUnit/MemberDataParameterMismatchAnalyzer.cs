@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -144,7 +146,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				{
 					return new Optional<Diagnostic>();
 				}
-
+				
 				var returnStatements = node
 					.Body
 					.Statements
@@ -155,7 +157,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				    var retExpression = returnStatement is YieldStatementSyntax
 				        ? ((YieldStatementSyntax) returnStatement).Expression
 				        : ((ReturnStatementSyntax) returnStatement).Expression;
-                    var retExprVisitor = new ReturnExpressionVisitor();
+                    var retExprVisitor = new ReturnExpressionVisitor(_ctx.SemanticModel);
 				    retExpression.Accept(retExprVisitor);
 				}
 
@@ -168,7 +170,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 			}
 		}
 
-        private class ReturnExpressionVisitor : CSharpSyntaxVisitor
+        private class ReturnExpressionVisitor : CSharpSyntaxVisitor<IReadOnlyCollection<ITypeSymbol>>
         {
 	        private readonly SemanticModel _semantic;
 
@@ -177,24 +179,42 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		        _semantic = semantic;
 	        }
 
-	        public override void VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
+	        public override IReadOnlyCollection<ITypeSymbol> VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
 	        {
-		        node
+		        var t = node
 			        .Initializer
 			        .Expressions
-			        .Select(expr => _semantic.GetSymbolInfo(expr));
-                base.VisitArrayCreationExpression(node);
+			        .Select(expr => _semantic.GetTypeInfo(expr).Type)
+			        .ToList();
+
+				return node
+			        .Initializer
+			        .Expressions
+			        .Select(expr => _semantic.GetTypeInfo(expr).Type)
+					.ToList();
             }
 
-            public override void VisitInvocationExpression(InvocationExpressionSyntax node)
-            {
-                base.VisitInvocationExpression(node);
-            }
+	        public override IReadOnlyCollection<ITypeSymbol> VisitInvocationExpression(InvocationExpressionSyntax node)
+	        {
+		        var invocationType = _semantic.GetTypeInfo(node).Type;
+		        var si = _semantic.GetSymbolInfo(node);
+		        var declaredSym = _semantic.GetDeclaredSymbol(node);
+		        var q = invocationType
+					.DeclaringSyntaxReferences
+					.SelectMany(x => ((MethodDeclarationSyntax)x.GetSyntax())
+								 .Body
+								 .Statements
+								 .Where(s => s is ReturnStatementSyntax || s is YieldStatementSyntax)
+								 .Select(ret => ret.Accept(this)));
+		        var isArray = invocationType.TypeKind == TypeKind.Array;
+				
+				return new List<ITypeSymbol> {_semantic.GetTypeInfo(node).Type};
+	        }
 
-            public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
-            {
-                base.VisitMemberAccessExpression(node);
-            }
+	        public override IReadOnlyCollection<ITypeSymbol> VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+	        {
+		        return new List<ITypeSymbol> {_semantic.GetTypeInfo(node).Type};
+	        }
         }
 
 		private class MemberNameExpressionVisitor : CSharpSyntaxVisitor<string>
