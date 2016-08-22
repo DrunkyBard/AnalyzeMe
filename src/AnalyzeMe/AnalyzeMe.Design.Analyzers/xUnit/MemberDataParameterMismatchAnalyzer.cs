@@ -51,6 +51,12 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				return;
 			}
 
+			var testMethodParameterTypes = methodDeclaration
+				.ParameterList
+				.Parameters
+				.Select(param => ctx.SemanticModel.GetDeclaredSymbol(param).Type)
+				.ToArray();
+
 		    foreach (var memberDataAttribute in memberDataAttributes)
 		    {
 		        var memberNameParameter =
@@ -58,9 +64,10 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		                .Item1
 		                .ArgumentList
 		                .Arguments
-		                .FirstOrDefault();
+		                .FirstOrDefault(x => x.NameColon != null && x.NameColon.ToString().Equals("memberName", StringComparison.Ordinal) || 
+											 x.NameColon == null);
 
-		        if (memberNameParameter == null || memberNameParameter.NameColon != null && memberNameParameter.NameColon.ToString() != "memberName")
+		        if (memberNameParameter == null)
 				{
 					continue;
 				}
@@ -73,8 +80,9 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 		                .Item1
 		                .ArgumentList
 		                .Arguments
-		                .FirstOrDefault(x => x.NameEquals != null && 
-										x.NameEquals.Name.ToString().Equals("MemberType", StringComparison.OrdinalIgnoreCase) && 
+		                .FirstOrDefault(x => 
+										x.NameEquals != null && 
+										x.NameEquals.Name.ToString().Equals("MemberType", StringComparison.Ordinal) && 
 										x.Expression != null &&
 										x.Expression.As<TypeOfExpressionSyntax>().HasValue);
 
@@ -93,7 +101,7 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				    return;
 			    }
 
-				var diagnosticVisitor = new TestFixtureMemberVisitor(fixtureMemberName, ctx, ws.CurrentSolution);
+				var diagnosticVisitor = new TestFixtureMemberVisitor(fixtureMemberName, ctx, ws.CurrentSolution, testMethodParameterTypes);
 
 			    var g = testFixtureClass
 				    .DeclaringSyntaxReferences
@@ -130,14 +138,16 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 			private readonly string _testFixtureMemberName;
 			private readonly SyntaxNodeAnalysisContext _ctx;
 			private readonly Solution _sln;
+			private readonly ITypeSymbol[] _testMethodParameterTypes;
 
-			public TestFixtureMemberVisitor(string testFixtureMemberName, SyntaxNodeAnalysisContext ctx, Solution sln)
+			public TestFixtureMemberVisitor(string testFixtureMemberName, SyntaxNodeAnalysisContext ctx, Solution sln, ITypeSymbol[] testMethodParameterTypes)
 			{
 				Contract.Requires(!string.IsNullOrWhiteSpace(testFixtureMemberName));
 
 				_testFixtureMemberName = testFixtureMemberName;
 				_ctx = ctx;
 				_sln = sln;
+				_testMethodParameterTypes = testMethodParameterTypes;
 			}
 
 			public override Optional<Diagnostic> VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -146,7 +156,11 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 				{
 					return new Optional<Diagnostic>();
 				}
-				
+
+				//if (((GenericNameSyntax)node.ReturnType).Identifier.ToFullString().Equals("TheoryData"))
+				//{
+				//}
+
 				var returnStatements = node
 					.Body
 					.Statements
@@ -154,11 +168,22 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 
 				foreach (var returnStatement in returnStatements)
 				{
-				    var retExpression = returnStatement is YieldStatementSyntax
+					var yieldReturn = returnStatement is YieldStatementSyntax;
+					var retExpression = yieldReturn
 				        ? ((YieldStatementSyntax) returnStatement).Expression
 				        : ((ReturnStatementSyntax) returnStatement).Expression;
-                    var retExprVisitor = new ReturnExpressionVisitor(_ctx.SemanticModel);
-				    retExpression.Accept(retExprVisitor);
+                    var retExprVisitor = new ReturnExpressionVisitor(_testFixtureMemberName, _ctx, _sln, _testMethodParameterTypes, yieldReturn);
+				    var parameterTypes = retExpression.Accept(retExprVisitor);
+
+					var b = 1;
+
+					foreach (var parameterType in parameterTypes)
+					{
+						if (_testMethodParameterTypes.FirstOrDefault(x => x.Equals(parameterType)) == null)
+						{
+							var a = 1;
+						}
+					}
 				}
 
 				return base.VisitMethodDeclaration(node);
@@ -170,16 +195,31 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 			}
 		}
 
-        private class ReturnExpressionVisitor : CSharpSyntaxVisitor<IReadOnlyCollection<ITypeSymbol>>
+		private class ReturnExpressionVisitor : CSharpSyntaxVisitor<IReadOnlyCollection<ITypeSymbol>>
         {
 	        private readonly SemanticModel _semantic;
+			private readonly string _testFixtureMemberName;
+			private readonly SyntaxNodeAnalysisContext _ctx;
+			private readonly Solution _sln;
+			private readonly ITypeSymbol[] _testMethodParameterTypes;
+			private readonly bool _yield;
 
-	        public ReturnExpressionVisitor(SemanticModel semantic)
-	        {
-		        _semantic = semantic;
-	        }
+			public ReturnExpressionVisitor(
+				string testFixtureMemberName, 
+				SyntaxNodeAnalysisContext ctx, 
+				Solution sln, 
+				ITypeSymbol[] testMethodParameterTypes, 
+				bool yieldReturn)
+			{
+				_semantic = ctx.SemanticModel;
+				_testFixtureMemberName = testFixtureMemberName;
+				_ctx = ctx;
+				_sln = sln;
+				_testMethodParameterTypes = testMethodParameterTypes;
+				_yield = yieldReturn;
+			}
 
-	        public override IReadOnlyCollection<ITypeSymbol> VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
+			public override IReadOnlyCollection<ITypeSymbol> VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
 	        {
 		        var t = node
 			        .Initializer
@@ -194,28 +234,74 @@ namespace AnalyzeMe.Design.Analyzers.xUnit
 					.ToList();
             }
 
+	        public override IReadOnlyCollection<ITypeSymbol> VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+	        {
+		        return base.VisitObjectCreationExpression(node);
+	        }
+
+	        private IEnumerable<object[]> T()
+	        {
+				return new List<object[]> {};
+	        }
+
 	        public override IReadOnlyCollection<ITypeSymbol> VisitInvocationExpression(InvocationExpressionSyntax node)
 	        {
-		        var invocationType = _semantic.GetTypeInfo(node).Type;
+				var invocationType = _semantic.GetTypeInfo(node).Type;
+		        
+		        var all = invocationType.AllInterfaces.ToArray().Select(x => x.Name.Equals("IEnumerable"));
+		        var tk = invocationType.TypeKind;
+				//TODO: Consider compilation error case, when invocation expression return type are not equals IEnumerable<T>, etc.
+
+				if (_yield)
+				{
+					if (!invocationType.AllInterfaces.Any(x => x.Name.Equals("IEnumerable")))
+					{}
+
+					var q = _semantic.GetSymbolInfo(node);
+					
+					var visitor = new SymVisitor();
+					var decl = (MethodDeclarationSyntax)q.Symbol.Accept(visitor);
+					var visitor1 = new TestFixtureMemberVisitor(decl.Identifier.ToFullString(), _ctx, _sln, _testMethodParameterTypes);
+					decl.Accept(visitor1);
+				}
+
 		        var si = _semantic.GetSymbolInfo(node);
 		        var declaredSym = _semantic.GetDeclaredSymbol(node);
-		        var q = invocationType
-					.DeclaringSyntaxReferences
-					.SelectMany(x => ((MethodDeclarationSyntax)x.GetSyntax())
-								 .Body
-								 .Statements
-								 .Where(s => s is ReturnStatementSyntax || s is YieldStatementSyntax)
-								 .Select(ret => ret.Accept(this)));
-		        var isArray = invocationType.TypeKind == TypeKind.Array;
 				
-				return new List<ITypeSymbol> {_semantic.GetTypeInfo(node).Type};
+				return new List<ITypeSymbol> {_semantic.GetTypeInfo(node).Type };
 	        }
 
 	        public override IReadOnlyCollection<ITypeSymbol> VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
 	        {
-		        return new List<ITypeSymbol> {_semantic.GetTypeInfo(node).Type};
+		        return new List<ITypeSymbol> { _semantic.GetTypeInfo(node).Type };
 	        }
         }
+
+		private class SymVisitor : SymbolVisitor<SyntaxNode>
+		{
+			public override SyntaxNode VisitMethod(IMethodSymbol symbol)
+			{
+				Func<MemberDeclarationSyntax, bool> p = syntax =>
+				{
+					var someMethodDeclaration = syntax.As<MethodDeclarationSyntax>();
+
+					return someMethodDeclaration.HasValue && someMethodDeclaration.Value.Identifier.ToFullString().Equals(symbol.Name);
+				};
+					
+				return symbol
+					.ReceiverType
+					.DeclaringSyntaxReferences
+					.FirstOrDefault(x => x
+						.GetSyntax()
+						.As<TypeDeclarationSyntax>()
+						.Value
+						.Members
+						.Any(p))
+					.GetSyntax()
+					.As<TypeDeclarationSyntax>()
+					.Value.Members.First(p);
+			}
+		}
 
 		private class MemberNameExpressionVisitor : CSharpSyntaxVisitor<string>
 		{
