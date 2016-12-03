@@ -18,6 +18,7 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             }
 
             var syntaxTreeContainer = node.SyntaxTree.GetText().Container;
+
             return Workspace.TryGetWorkspace(syntaxTreeContainer, out workspace);
         }
 

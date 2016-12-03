@@ -36,6 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <Compile Include="NoStructDefaultConstructorAnalyzer.cs" />
     <Compile Include="Utils\SyntaxNodeAnalysisContextExtensions.cs" />
     <Compile Include="Utils\TplExtensions.cs" />
     <Compile Include="xUnit\MemberDataParameterMismatchAnalyzer.cs" />
