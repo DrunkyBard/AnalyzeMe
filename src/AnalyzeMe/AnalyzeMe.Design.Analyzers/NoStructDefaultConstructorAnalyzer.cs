@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices;
 using AnalyzeMe.Design.Analyzers.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.FindSymbols;
-using Microsoft.CodeAnalysis.Semantics;
 
 namespace AnalyzeMe.Design.Analyzers
 {
@@ -23,15 +20,35 @@ namespace AnalyzeMe.Design.Analyzers
             DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(NoStructDefaultConstructorDescription);
+        internal static readonly DiagnosticDescriptor StructHasAttributeButHasParameterlessConstructorOnly = new DiagnosticDescriptor(
+            "StructHasAttributeButHasParameterlessConstructorOnlyId",
+            "",
+            "",
+            "",
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(NoStructDefaultConstructorDescription, StructHasAttributeButHasParameterlessConstructorOnly);
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSyntaxNodeAction(AnalyzeStructDefaultCtor, SyntaxKind.ObjectCreationExpression);
-            //context.RegisterSyntaxNodeAction(AnalyzeStructDefaultCtor, SyntaxKind.MethodDeclaration);
+            //context.RegisterSyntaxNodeAction(AnalyzeStructDefaultCtorInvocation, SyntaxKind.ObjectCreationExpression);
+            context.RegisterSyntaxNodeAction(AnalyzeStructTypeParameter, SyntaxKind.GenericName);
+            //context.RegisterSyntaxNodeAction(AnalyzeStructDefaultCtorInvocation, SyntaxKind.MethodDeclaration);
         }
 
-        private void AnalyzeStructDefaultCtor(SyntaxNodeAnalysisContext ctx)
+        private void AnalyzeStructTypeParameter(SyntaxNodeAnalysisContext ctx)
+        {
+            var visitor = new GenericInvocationVisitor();
+            ctx
+                .Node
+                .As<CSharpSyntaxNode>()
+                .Value
+                .Accept(visitor)
+                .WhenHasValueThen(ctx.ReportDiagnostic);
+        }
+
+        private void AnalyzeStructDefaultCtorInvocation(SyntaxNodeAnalysisContext ctx)
         {
             var objectCreation = ctx
                 .Node
@@ -74,8 +91,40 @@ namespace AnalyzeMe.Design.Analyzers
                               .Equals("AnalyzeMe.WorkProcess.Tools.NoDefaultConstructorAttribute", StringComparison.Ordinal);
                 }));
 
+            var hasDefaultConstructorOnly = !namedSymbol.Constructors.Any(x => x.Arity > 0);
+
+            if (hasAttribute)
+            {
+                var d = Diagnostic.Create(NoStructDefaultConstructorDescription, ctx.Node.GetLocation());
+                ctx.ReportDiagnostic(d);
+
+                if (hasDefaultConstructorOnly)
+                {
+                    var diagnostic = Diagnostic.Create(StructHasAttributeButHasParameterlessConstructorOnly, ctx.Node.GetLocation());
+                    ctx.ReportDiagnostic(diagnostic);
+                }
+            }
+
 
             var q = 1;
+        }
+
+        private sealed class GenericInvocationVisitor : CSharpSyntaxVisitor<Optional<Diagnostic>>
+        {
+            public override Optional<Diagnostic> VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+            {
+                return base.VisitObjectCreationExpression(node);
+            }
+
+            public override Optional<Diagnostic> VisitInvocationExpression(InvocationExpressionSyntax node)
+            {
+                return base.VisitInvocationExpression(node);
+            }
+
+            public override Optional<Diagnostic> DefaultVisit(SyntaxNode node)
+            {
+                throw new InvalidOperationException();
+            }
         }
     }
 
@@ -84,6 +133,28 @@ namespace AnalyzeMe.Design.Analyzers
         public A(int i)
         {
             
+        }
+    }
+
+    public class Q<T>
+    {
+    }
+
+    public class W
+    {
+        public void A<T>() where T : new()
+        {
+            new T();
+        }
+    }
+
+    public class Test
+    {
+        public void A()
+        {
+            var q = new Q<A>();
+            var w = new W();
+            w.A<A>();
         }
     }
 }

@@ -48,6 +48,38 @@ namespace Test
 
 ";
 
+        private string _source1 = @"
+
+ public struct A
+    {
+        public A(int i)
+        {
+            
+        }
+    }
+
+    public class Q<T>
+    {
+    }
+
+    public class W
+    {
+        public void A<T>() where T : new()
+        {
+            new T();
+        }
+    }
+
+    public class Test
+    {
+        public void A()
+        {
+            var q = new Q<A>();
+            var w = new W();
+            w.A<A>();
+        }
+    }
+";
         [Fact]
         public void Test()
         {
@@ -62,7 +94,7 @@ namespace Test
                         }
             };
 
-            VerifyCSharpDiagnostic(_source, expected);
+            VerifyCSharpDiagnostic(_source1, expected);
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
