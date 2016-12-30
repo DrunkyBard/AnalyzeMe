@@ -288,8 +288,26 @@ namespace AnalyzeMe.Design.Analyzers.Utils
             return node.ReplaceToken(replacementToken, newTokenFunc(replacementToken));
         }
 
+	    public static async Task<SemanticModel> GetSemanticModel(this SyntaxNode node, CancellationToken ct)
+	    {
+		    Workspace ws;
+		    node.TryGetWorkspace(out ws);
+
+			return await GetSemanticModel(node, ws.CurrentSolution, ct);
+	    }
+
 	    public static async Task<SemanticModel> GetSemanticModel(this SyntaxNode node, Solution sln, CancellationToken ct)
 	    {
+		    if (node == null)
+		    {
+			    throw new ArgumentNullException(nameof(node));
+		    }
+
+		    if (sln == null)
+		    {
+			    throw new ArgumentNullException(nameof(sln));
+		    }
+
 		    var root = await node.SyntaxTree.GetRootAsync(ct);
 		    SyntaxNode docRoot;
 
@@ -297,9 +315,9 @@ namespace AnalyzeMe.Design.Analyzers.Utils
 			    .Projects
 			    .SelectMany(p => p.Documents)
 			    .SingleOrDefault(doc => doc.SupportsSyntaxTree &&
-			                  doc.SupportsSemanticModel &&
-			                  doc.TryGetSyntaxRoot(out docRoot) &&
-			                  docRoot.IsEquivalentTo(root));
+										doc.SupportsSemanticModel &&
+										doc.TryGetSyntaxRoot(out docRoot) &&
+										docRoot.IsEquivalentTo(root));
 
 		    if (containingDocument == null)
 		    {

@@ -58,14 +58,20 @@ namespace Test
         }
     }
 
-    public class Q<T>
+    public class Q<T> where T : struct
     {
+		public Q(){}
+		public void Foo()
+		{
+			System.Activator.CreateInstance(typeof(int));
+			var a = new T();
+		}
     }
 
     public class W
     {
         public void A<T>() where T : new()
-        {
+        {			
             new T();
         }
     }
